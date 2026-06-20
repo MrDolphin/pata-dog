@@ -13,6 +13,13 @@ extends Node2D
 @onready var right_paw_up = $Mascot/RightPawJoint/RightPawUp
 @onready var right_paw_down = $Mascot/RightPawJoint/RightPawDown
 
+@onready var hat_slot = $Mascot/BodyJoint/HeadJoint/HatSlot
+@onready var glasses_slot = $Mascot/BodyJoint/HeadJoint/GlassesSlot
+@onready var bowtie_slot = $Mascot/BodyJoint/BowtieSlot
+@onready var left_prop_slot = $Mascot/LeftPawJoint/PropSlot
+@onready var right_prop_slot = $Mascot/RightPawJoint/PropSlot
+
+
 @onready var toggle_editor_btn = $UI/ToggleEditorBtn
 @onready var editor_panel = $UI/EditorPanel
 @onready var style_option = $UI/EditorPanel/VBoxContainer/StyleHBox/StyleOption
@@ -30,16 +37,38 @@ var use_left_paw = true
 var excitement = 0.0
 var dragging_joint = false
 
-
 var dragging_window = false
 var drag_offset = Vector2.ZERO
 
 var part_nodes = []
 var current_style = "cute"
 
+# Save Data Variables
+var total_clicks: int = 0
+var current_points: int = 0
+var unlocked_cosmetics: Array = ["default"]
+var equipped_cosmetics: Dictionary = {
+	"hat": "",
+	"glasses": "",
+	"bowtie": "",
+	"left_prop": "",
+	"right_prop": ""
+}
+
+# Procedural sound buffers
+var click_sound: AudioStreamWav = null
+var tap_sound: AudioStreamWav = null
+
+const SAVE_PATH = "user://pata_dog_save.json"
+
+
 func _ready():
+	_bake_procedural_sounds()
+	load_data()
 	_reset_paws()
+	_update_equipped_slots()
 	get_viewport().transparent_bg = true
+
 	
 	part_nodes = [
 		head,
@@ -155,7 +184,7 @@ func _input(event):
 				_bark()
 				_paw_down("both")
 			else:
-				_trigger_alternate_wave()
+				_trigger_alternate_wave(true)
 	
 	# 鼠标检测
 	elif event is InputEventMouseButton and not dragging_window:
@@ -165,9 +194,19 @@ func _input(event):
 				return
 			
 			if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT:
-				_trigger_alternate_wave()
+				_trigger_alternate_wave(false)
 
-func _trigger_alternate_wave():
+
+func _trigger_alternate_wave(is_keyboard: bool = true):
+	total_clicks += 1
+	current_points += 1
+	_on_points_incremented()
+	
+	if is_keyboard:
+		_play_sound(click_sound)
+	else:
+		_play_sound(tap_sound)
+		
 	if use_left_paw:
 		_paw_down("left")
 	else:
@@ -176,7 +215,7 @@ func _trigger_alternate_wave():
 
 func _paw_down(side):
 	_add_excitement()
-	_tap_sound()
+
 	
 	if current_style == "cute":
 		_paw_down_cute(side)
@@ -365,7 +404,125 @@ func _tap_sound():
 	pass
 
 func _bark():
-	pass
+	_play_sound(click_sound)
+
+# Procedural Sound Synthesizer
+func _bake_procedural_sounds():
+	var mix_rate = 22050
+	
+	# 1. Keyboard Click (Clack)
+	var duration_click = 0.05
+	var samples_click = int(mix_rate * duration_click)
+	var bytes_click = PackedByteArray()
+	bytes_click.resize(samples_click * 2)
+	for i in range(samples_click):
+		var t = float(i) / mix_rate
+		var val = (randf_range(-0.4, 0.4) + sin(2.0 * PI * 1800.0 * t) * 0.4) * exp(-t * 120.0)
+		var val_16 = int(clamp(val * 32767.0, -32768.0, 32767.0))
+		bytes_click.encode_s16(i * 2, val_16)
+	
+	click_sound = AudioStreamWav.new()
+	click_sound.format = AudioStreamWav.FORMAT_16_BITS
+	click_sound.mix_rate = mix_rate
+	click_sound.stereo = false
+	click_sound.data = bytes_click
+
+	# 2. Drum Tap (Thump)
+	var duration_tap = 0.15
+	var samples_tap = int(mix_rate * duration_tap)
+	var bytes_tap = PackedByteArray()
+	bytes_tap.resize(samples_tap * 2)
+	for i in range(samples_tap):
+		var t = float(i) / mix_rate
+		var val = sin(2.0 * PI * 135.0 * t) * exp(-t * 22.0)
+		var val_16 = int(clamp(val * 32767.0, -32768.0, 32767.0))
+		bytes_tap.encode_s16(i * 2, val_16)
+		
+	tap_sound = AudioStreamWav.new()
+	tap_sound.format = AudioStreamWav.FORMAT_16_BITS
+	tap_sound.mix_rate = mix_rate
+	tap_sound.stereo = false
+	tap_sound.data = bytes_tap
+
+# Dynamically play synthesized sound
+func _play_sound(stream_val: AudioStream):
+	if not stream_val: return
+	var player = AudioStreamPlayer.new()
+	add_child(player)
+	player.stream = stream_val
+	player.pitch_scale = randf_range(0.95, 1.05) + excitement * 0.25
+	player.play()
+	player.finished.connect(func():
+		player.queue_free()
+	)
+
+# Update equipped slot textures
+func _update_equipped_slots():
+	# Map equipped cosmetics keys to slot nodes
+	_load_cosmetic_into_slot(equipped_cosmetics.get("hat", ""), hat_slot)
+	_load_cosmetic_into_slot(equipped_cosmetics.get("glasses", ""), glasses_slot)
+	_load_cosmetic_into_slot(equipped_cosmetics.get("bowtie", ""), bowtie_slot)
+	_load_cosmetic_into_slot(equipped_cosmetics.get("left_prop", ""), left_prop_slot)
+	_load_cosmetic_into_slot(equipped_cosmetics.get("right_prop", ""), right_prop_slot)
+
+func _load_cosmetic_into_slot(item_name: String, slot_node: Sprite2D):
+	if not slot_node: return
+	if item_name == "":
+		slot_node.texture = null
+		return
+	var file_path = "res://assets/cosmetics/" + item_name + ".png"
+	if FileAccess.file_exists(file_path):
+		var tex = load(file_path)
+		slot_node.texture = tex
+	else:
+		slot_node.texture = null
+
+# Point increment listener (Phase 2 placeholder / Phase 3 hook)
+func _on_points_incremented():
+	if total_clicks % 50 == 0:
+		save_data()
+
+# Save/Load System
+func save_data():
+	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if file:
+		var data = {
+			"total_clicks": total_clicks,
+			"current_points": current_points,
+			"unlocked_cosmetics": unlocked_cosmetics,
+			"equipped_cosmetics": equipped_cosmetics
+		}
+		var json_string = JSON.stringify(data)
+		file.store_string(json_string)
+		file.close()
+
+func load_data():
+	if not FileAccess.file_exists(SAVE_PATH):
+		save_data()
+		return
+		
+	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if file:
+		var json_string = file.get_as_text()
+		file.close()
+		var json = JSON.new()
+		var error = json.parse(json_string)
+		if error == OK:
+			var data = json.data
+			if data is Dictionary:
+				total_clicks = data.get("total_clicks", 0)
+				current_points = data.get("current_points", 0)
+				unlocked_cosmetics = data.get("unlocked_cosmetics", ["default"])
+				var equipped = data.get("equipped_cosmetics", {})
+				for slot in equipped_cosmetics.keys():
+					if equipped.has(slot):
+						equipped_cosmetics[slot] = equipped[slot]
+
+func _notification(what):
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		save_data()
+		get_tree().quit()
+
 
 # Helper to retrieve active joint node
 func _get_current_joint() -> Node2D:
