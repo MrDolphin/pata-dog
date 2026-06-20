@@ -1,13 +1,12 @@
+[gd_scene format=3 uid="uid://cxabjeb0bth6q"]
 
-[gd_scene load_steps=9 format=3 uid="uid://cxabjeb0bth6q"]
-
-[ext_resource type="Script" path="res://main.gd" id="1_abcde"]
-[ext_resource type="Texture2D" path="res://assets/body.svg" id="2_body"]
-[ext_resource type="Texture2D" path="res://assets/desk_kbd.svg" id="3_desk"]
-[ext_resource type="Texture2D" path="res://assets/paw_up.svg" id="4_pawup"]
-[ext_resource type="Texture2D" path="res://assets/paw_down.svg" id="5_pawdown"]
-[ext_resource type="Texture2D" path="res://assets/tail.svg" id="6_tail"]
-[ext_resource type="Script" path="res://drawing_canvas.gd" id="7_canvas"]
+[ext_resource type="Script" uid="uid://c5l0t0326ct6n" path="res://main.gd" id="1_abcde"]
+[ext_resource type="Texture2D" uid="uid://ddkjdljjxtyxo" path="res://assets/body.svg" id="2_body"]
+[ext_resource type="Texture2D" uid="uid://cdbtvm40dpfpx" path="res://assets/desk_kbd.svg" id="3_desk"]
+[ext_resource type="Texture2D" uid="uid://yjbjl5l3af8l" path="res://assets/paw_up.svg" id="4_pawup"]
+[ext_resource type="Texture2D" uid="uid://bqkx7grm4wqoe" path="res://assets/paw_down.svg" id="5_pawdown"]
+[ext_resource type="Texture2D" uid="uid://ducsfevonw35k" path="res://assets/tail.svg" id="6_tail"]
+[ext_resource type="Script" uid="uid://ek877mspene7" path="res://drawing_canvas.gd" id="7_canvas"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_handle"]
 bg_color = Color(0, 0.9, 0.1, 0.8)
@@ -21,76 +20,99 @@ corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
-
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=1982947122]
 script = ExtResource("1_abcde")
 
-[node name="Mascot" type="Node2D" parent="."]
+[node name="Mascot" type="Node2D" parent="." unique_id=747983630]
 
-[node name="TailJoint" type="Node2D" parent="Mascot"]
+[node name="TailJoint" type="Node2D" parent="Mascot" unique_id=1784875259]
 position = Vector2(280, 420)
 rotation = -0.5
 
-[node name="Tail" type="Sprite2D" parent="Mascot/TailJoint"]
+[node name="Tail" type="Sprite2D" parent="Mascot/TailJoint" unique_id=1373040395]
+position = Vector2(-80.04984, -0.29292202)
+scale = Vector2(0.9083156, 1.0572889)
 texture = ExtResource("6_tail")
 offset = Vector2(0, -75)
 
-[node name="BodyJoint" type="Node2D" parent="Mascot"]
+[node name="BodyJoint" type="Node2D" parent="Mascot" unique_id=1444412046]
 position = Vector2(400, 350)
 
-[node name="Body" type="Sprite2D" parent="Mascot/BodyJoint"]
+[node name="Body" type="Sprite2D" parent="Mascot/BodyJoint" unique_id=2084985916]
 texture = ExtResource("2_body")
 
-[node name="HeadJoint" type="Node2D" parent="Mascot/BodyJoint"]
+[node name="BowtieSlot" type="Sprite2D" parent="Mascot/BodyJoint"]
+position = Vector2(0, 30)
+
+
+[node name="HeadJoint" type="Node2D" parent="Mascot/BodyJoint" unique_id=1486067978]
 position = Vector2(0, -100)
 
-[node name="Head" type="Sprite2D" parent="Mascot/BodyJoint/HeadJoint"]
+[node name="Head" type="Sprite2D" parent="Mascot/BodyJoint/HeadJoint" unique_id=1308111687]
 
-[node name="LeftPawJoint" type="Node2D" parent="Mascot"]
+[node name="HatSlot" type="Sprite2D" parent="Mascot/BodyJoint/HeadJoint"]
+position = Vector2(0, -60)
+
+[node name="GlassesSlot" type="Sprite2D" parent="Mascot/BodyJoint/HeadJoint"]
+position = Vector2(0, 0)
+
+
+[node name="LeftPawJoint" type="Node2D" parent="Mascot" unique_id=1105026492]
 position = Vector2(240, 340)
 
-[node name="LeftPawUp" type="Sprite2D" parent="Mascot/LeftPawJoint"]
+[node name="LeftPawUp" type="Sprite2D" parent="Mascot/LeftPawJoint" unique_id=1065451171]
+position = Vector2(-4, 49)
 texture = ExtResource("4_pawup")
 
-[node name="LeftPawDown" type="Sprite2D" parent="Mascot/LeftPawJoint"]
-visible = false
-position = Vector2(30, 30)
+[node name="LeftPawDown" type="Sprite2D" parent="Mascot/LeftPawJoint" unique_id=1776123577]
+position = Vector2(5, 70)
+scale = Vector2(0.76666665, 0.76)
 texture = ExtResource("5_pawdown")
 
-[node name="RightPawJoint" type="Node2D" parent="Mascot"]
+[node name="PropSlot" type="Sprite2D" parent="Mascot/LeftPawJoint"]
+position = Vector2(0, 60)
+
+
+[node name="RightPawJoint" type="Node2D" parent="Mascot" unique_id=609754595]
 position = Vector2(560, 340)
 
-[node name="RightPawUp" type="Sprite2D" parent="Mascot/RightPawJoint"]
+[node name="RightPawUp" type="Sprite2D" parent="Mascot/RightPawJoint" unique_id=1569022040]
+position = Vector2(20, 44)
 texture = ExtResource("4_pawup")
 flip_h = true
 
-[node name="RightPawDown" type="Sprite2D" parent="Mascot/RightPawJoint"]
-visible = false
-position = Vector2(-30, 30)
+[node name="RightPawDown" type="Sprite2D" parent="Mascot/RightPawJoint" unique_id=476752037]
+position = Vector2(17, 73)
+scale = Vector2(0.78, 0.73333335)
 texture = ExtResource("5_pawdown")
 flip_h = true
 
-[node name="Instrument" type="Sprite2D" parent="."]
-position = Vector2(400, 450)
+[node name="PropSlot" type="Sprite2D" parent="Mascot/RightPawJoint"]
+position = Vector2(0, 60)
+flip_h = true
+
+
+[node name="Instrument" type="Sprite2D" parent="." unique_id=1610215954]
+position = Vector2(438, 466)
 texture = ExtResource("3_desk")
 
-[node name="UI" type="CanvasLayer" parent="."]
+[node name="UI" type="CanvasLayer" parent="." unique_id=883840219]
 
-[node name="ToggleEditorBtn" type="Button" parent="UI"]
+[node name="ToggleEditorBtn" type="Button" parent="UI" unique_id=282002418]
 offset_left = 20.0
 offset_top = 20.0
 offset_right = 120.0
 offset_bottom = 55.0
 text = "⚙️ 配置桌宠"
 
-[node name="EditorPanel" type="Panel" parent="UI"]
+[node name="EditorPanel" type="Panel" parent="UI" unique_id=174447156]
 visible = false
 offset_left = 20.0
 offset_top = 70.0
 offset_right = 360.0
 offset_bottom = 580.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="UI/EditorPanel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/EditorPanel" unique_id=43373736]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -103,59 +125,58 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
 
-[node name="Title" type="Label" parent="UI/EditorPanel/VBoxContainer"]
+[node name="Title" type="Label" parent="UI/EditorPanel/VBoxContainer" unique_id=682972443]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "桌宠自定义编辑器"
 horizontal_alignment = 1
 
-[node name="StyleHBox" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer"]
+[node name="StyleHBox" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer" unique_id=1469926371]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/StyleHBox"]
+[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/StyleHBox" unique_id=1562968361]
 layout_mode = 2
 text = "风格: "
 
-[node name="StyleOption" type="OptionButton" parent="UI/EditorPanel/VBoxContainer/StyleHBox"]
+[node name="StyleOption" type="OptionButton" parent="UI/EditorPanel/VBoxContainer/StyleHBox" unique_id=85086082]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="PartHBox" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer"]
+[node name="PartHBox" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer" unique_id=933886609]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/PartHBox"]
+[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/PartHBox" unique_id=490320484]
 layout_mode = 2
 text = "当前部件: "
 
-[node name="PartOption" type="OptionButton" parent="UI/EditorPanel/VBoxContainer/PartHBox"]
+[node name="PartOption" type="OptionButton" parent="UI/EditorPanel/VBoxContainer/PartHBox" unique_id=337242417]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="CanvasContainer" type="CenterContainer" parent="UI/EditorPanel/VBoxContainer"]
+[node name="CanvasContainer" type="CenterContainer" parent="UI/EditorPanel/VBoxContainer" unique_id=1677332245]
 layout_mode = 2
 
-[node name="Canvas" type="Control" parent="UI/EditorPanel/VBoxContainer/CanvasContainer"]
+[node name="Canvas" type="Control" parent="UI/EditorPanel/VBoxContainer/CanvasContainer" unique_id=266027806]
 layout_mode = 2
 script = ExtResource("7_canvas")
 
-[node name="BrushControl" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer"]
+[node name="BrushControl" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer" unique_id=1950503376]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ColorLabel" type="Label" parent="UI/EditorPanel/VBoxContainer/BrushControl"]
+[node name="ColorLabel" type="Label" parent="UI/EditorPanel/VBoxContainer/BrushControl" unique_id=476158139]
 layout_mode = 2
 text = "颜色: "
 
-[node name="BrushColor" type="ColorPickerButton" parent="UI/EditorPanel/VBoxContainer/BrushControl"]
+[node name="BrushColor" type="ColorPickerButton" parent="UI/EditorPanel/VBoxContainer/BrushControl" unique_id=1395626853]
 layout_mode = 2
 size_flags_horizontal = 3
-color = Color(0, 0, 0, 1)
 
-[node name="SizeLabel" type="Label" parent="UI/EditorPanel/VBoxContainer/BrushControl"]
+[node name="SizeLabel" type="Label" parent="UI/EditorPanel/VBoxContainer/BrushControl" unique_id=200775616]
 layout_mode = 2
 text = "大小: "
 
-[node name="BrushSize" type="HSlider" parent="UI/EditorPanel/VBoxContainer/BrushControl"]
+[node name="BrushSize" type="HSlider" parent="UI/EditorPanel/VBoxContainer/BrushControl" unique_id=198268910]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -163,51 +184,49 @@ min_value = 2.0
 max_value = 50.0
 value = 12.0
 
-[node name="ActionButtons" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer"]
+[node name="ActionButtons" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer" unique_id=189101561]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ClearBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/ActionButtons"]
+[node name="ClearBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/ActionButtons" unique_id=1075913529]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "清除画布"
 
-[node name="SaveBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/ActionButtons"]
+[node name="SaveBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/ActionButtons" unique_id=305588527]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "应用画板"
 
-[node name="ImportButtons" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer"]
+[node name="ImportButtons" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer" unique_id=1044037042]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ImportBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/ImportButtons"]
+[node name="ImportBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/ImportButtons" unique_id=96845474]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "导入图片"
 
-[node name="DropLabel" type="Label" parent="UI/EditorPanel/VBoxContainer"]
+[node name="DropLabel" type="Label" parent="UI/EditorPanel/VBoxContainer" unique_id=96005197]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
 theme_override_font_sizes/font_size = 11
 text = "拖拽本地图片到窗口可直接导入为当前部件"
 horizontal_alignment = 1
 
-[node name="FileDialog" type="FileDialog" parent="UI"]
-title = "选择图片文件"
+[node name="FileDialog" type="FileDialog" parent="UI" unique_id=1293649619]
+title = "Open a File"
 size = Vector2i(600, 400)
 ok_button_text = "打开"
 file_mode = 0
 access = 2
 filters = PackedStringArray("*.png ; PNG Images", "*.jpg, *.jpeg ; JPG Images")
 
-[node name="JointHandle" type="Panel" parent="UI"]
+[node name="JointHandle" type="Panel" parent="UI" unique_id=537464381]
 visible = false
 custom_minimum_size = Vector2(20, 20)
 offset_right = 20.0
 offset_bottom = 20.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_handle")
 
-[node name="AudioStreamPlayers" type="Node" parent="."]
-
-
+[node name="AudioStreamPlayers" type="Node" parent="." unique_id=537824719]
