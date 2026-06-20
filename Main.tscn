@@ -332,19 +332,40 @@ metadata/_tab_index = 1
 [node name="VBox" type="VBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_constants/separation = 10
 
 [node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox"]
 layout_mode = 2
-text = "选择要佩戴的饰品:"
+text = "装备栏"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox"]
+layout_mode = 2
 
 [node name="WardrobeGrid" type="GridContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox"]
 layout_mode = 2
-size_flags_horizontal = 3
-columns = 3
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 10
+columns = 2
+
+[node name="AudioTab" type="VBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+metadata/_tab_index = 2
+
+[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/AudioTab"]
+layout_mode = 2
+text = "自定义轮询音效 (WAV/OGG):"
+
+[node name="ImportAudioBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/TabContainer/AudioTab"]
+layout_mode = 2
+text = "➕ 导入音效"
+
+[node name="ClearAudioBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/TabContainer/AudioTab"]
+layout_mode = 2
+text = "❌ 清空音效"
+
+[node name="AudioList" type="ItemList" parent="UI/EditorPanel/VBoxContainer/TabContainer/AudioTab"]
+layout_mode = 2
+size_flags_vertical = 3
 
 [node name="FileDialog" type="FileDialog" parent="UI" unique_id=1293649619]
 title = "Open a File"

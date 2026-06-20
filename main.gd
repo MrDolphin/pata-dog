@@ -43,6 +43,11 @@ extends Node2D
 @onready var chest_particles = $ChestParticles
 @onready var wardrobe_grid = $UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox/WardrobeGrid
 
+@onready var import_audio_btn = $UI/EditorPanel/VBoxContainer/TabContainer/AudioTab/ImportAudioBtn
+@onready var clear_audio_btn = $UI/EditorPanel/VBoxContainer/TabContainer/AudioTab/ClearAudioBtn
+@onready var audio_list = $UI/EditorPanel/VBoxContainer/TabContainer/AudioTab/AudioList
+var audio_file_dialog: FileDialog = null
+
 var use_left_paw = true
 var excitement = 0.0
 var dragging_joint = false
@@ -134,6 +139,16 @@ func _ready():
 	canvas.set_brush_size(brush_size_slider.value)
 	
 	chest_button.pressed.connect(_on_chest_button_pressed)
+	
+	audio_file_dialog = FileDialog.new()
+	$UI.add_child(audio_file_dialog)
+	audio_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILES
+	audio_file_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	audio_file_dialog.filters = ["*.wav, *.ogg ; Audio Files"]
+	audio_file_dialog.files_selected.connect(_on_audio_files_selected)
+	
+	import_audio_btn.pressed.connect(func(): audio_file_dialog.popup_centered(Vector2(600,400)))
+	clear_audio_btn.pressed.connect(_on_clear_audio)
 	
 	context_menu = PopupMenu.new()
 	context_menu.add_item("最小化 (Minimize)", 0)
@@ -372,6 +387,29 @@ func _on_data_loaded():
 			node.scale = Vector2(t_data.get("scale_x", 1.0), t_data.get("scale_y", 1.0))
 			node.rotation_degrees = t_data.get("rot", 0.0)
 			node.position = Vector2(t_data.get("off_x", 0.0), t_data.get("off_y", 0.0))
+			
+	if SaveManager.custom_audio_paths.size() > 0:
+		SoundManager.load_custom_audio(SaveManager.custom_audio_paths)
+	_update_audio_list()
+
+func _on_audio_files_selected(paths: PackedStringArray):
+	for p in paths:
+		if not SaveManager.custom_audio_paths.has(p):
+			SaveManager.custom_audio_paths.append(p)
+	SaveManager.save()
+	SoundManager.load_custom_audio(SaveManager.custom_audio_paths)
+	_update_audio_list()
+
+func _on_clear_audio():
+	SaveManager.custom_audio_paths.clear()
+	SaveManager.save()
+	SoundManager.load_custom_audio([])
+	_update_audio_list()
+
+func _update_audio_list():
+	audio_list.clear()
+	for p in SaveManager.custom_audio_paths:
+		audio_list.add_item(p.get_file())
 
 func _on_points_changed(total: int, current: int):
 	var progress = current % cosmetics_manager.CHEST_COST

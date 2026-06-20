@@ -5,12 +5,14 @@ extends Node
 signal theme_changed(theme_name: String)
 
 # Available sound themes
-enum SoundTheme { MECHANICAL_BLUE, MECHANICAL_BROWN, TAIKO, BARK }
+enum SoundTheme { MECH_BLUE, MECH_BROWN, TAIKO, BARK, CUSTOM }
 
-const THEME_NAMES: Array[String] = ["青轴机械 (Blue)", "茶轴机械 (Brown)", "太鼓 (Taiko)", "汪汪 (Bark)"]
-const THEME_KEYS: Array[String] = ["mechanical_blue", "mechanical_brown", "taiko", "bark"]
+const THEME_NAMES: Array[String] = ["青轴机械 (Blue)", "茶轴机械 (Brown)", "太鼓 (Taiko)", "汪汪 (Bark)", "自定义 (Custom)"]
+const THEME_KEYS: Array[String] = ["mechanical_blue", "mechanical_brown", "taiko", "bark", "custom"]
 
-var current_theme: int = SoundTheme.MECHANICAL_BLUE
+var current_theme: SoundTheme = SoundTheme.MECH_BLUE
+var custom_streams: Array[AudioStream] = []
+var custom_index: int = 0
 
 # Pre-baked sound buffers per theme: { theme_key: { "click": AudioStreamWAV, "tap": AudioStreamWAV } }
 var _sound_banks: Dictionary = {}
@@ -23,11 +25,25 @@ func _ready() -> void:
 # ─── Public API ───────────────────────────────────────────────
 
 func play_click(excitement: float = 0.0) -> void:
+	if current_theme == SoundTheme.CUSTOM:
+		if custom_streams.size() > 0:
+			var stream = custom_streams[custom_index]
+			custom_index = (custom_index + 1) % custom_streams.size()
+			_play(stream, excitement, true)
+			return
+	
 	var bank = _sound_banks.get(THEME_KEYS[current_theme], null)
 	if bank:
 		_play(bank["click"], excitement)
 
 func play_tap(excitement: float = 0.0) -> void:
+	if current_theme == SoundTheme.CUSTOM:
+		if custom_streams.size() > 0:
+			var stream = custom_streams[custom_index]
+			custom_index = (custom_index + 1) % custom_streams.size()
+			_play(stream, excitement, true)
+			return
+
 	var bank = _sound_banks.get(THEME_KEYS[current_theme], null)
 	if bank:
 		_play(bank["tap"], excitement)
@@ -51,14 +67,18 @@ func get_theme_names() -> Array[String]:
 
 # ─── Internal Playback ────────────────────────────────────────
 
-func _play(stream: AudioStreamWAV, excitement: float) -> void:
+func _play(stream: AudioStream, excitement: float, is_custom: bool = false) -> void:
 	if not stream:
 		return
 	var player = AudioStreamPlayer.new()
 	add_child(player)
 	player.stream = stream
-	player.pitch_scale = randf_range(0.93, 1.07) + excitement * 0.3
-	player.volume_db = -6.0
+	if is_custom:
+		player.pitch_scale = randf_range(0.95, 1.05)
+		player.volume_db = 0.0
+	else:
+		player.pitch_scale = randf_range(0.93, 1.07) + excitement * 0.3
+		player.volume_db = -6.0
 	player.play()
 	player.finished.connect(func():
 		player.queue_free()
