@@ -1,4 +1,5 @@
-[gd_scene load_steps=7 format=3 uid="uid://cxabjeb0bth6q"]
+
+[gd_scene load_steps=8 format=3 uid="uid://cxabjeb0bth6q"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_abcde"]
 [ext_resource type="Texture2D" path="res://assets/body.svg" id="2_body"]
@@ -6,6 +7,7 @@
 [ext_resource type="Texture2D" path="res://assets/paw_up.svg" id="4_pawup"]
 [ext_resource type="Texture2D" path="res://assets/paw_down.svg" id="5_pawdown"]
 [ext_resource type="Texture2D" path="res://assets/tail.svg" id="6_tail"]
+[ext_resource type="Script" path="res://drawing_canvas.gd" id="7_canvas"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_abcde")
@@ -59,5 +61,133 @@ flip_h = true
 position = Vector2(400, 450)
 texture = ExtResource("3_desk")
 
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="ToggleEditorBtn" type="Button" parent="UI"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 120.0
+offset_bottom = 55.0
+text = "⚙️ 配置桌宠"
+
+[node name="EditorPanel" type="Panel" parent="UI"]
+visible = false
+offset_left = 20.0
+offset_top = 70.0
+offset_right = 360.0
+offset_bottom = 580.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/EditorPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 15.0
+offset_top = 15.0
+offset_right = -15.0
+offset_bottom = -15.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="UI/EditorPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "桌宠自定义编辑器"
+horizontal_alignment = 1
+
+[node name="StyleHBox" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/StyleHBox"]
+layout_mode = 2
+text = "风格: "
+
+[node name="StyleOption" type="OptionButton" parent="UI/EditorPanel/VBoxContainer/StyleHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PartHBox" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/PartHBox"]
+layout_mode = 2
+text = "当前部件: "
+
+[node name="PartOption" type="OptionButton" parent="UI/EditorPanel/VBoxContainer/PartHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CanvasContainer" type="CenterContainer" parent="UI/EditorPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Canvas" type="Control" parent="UI/EditorPanel/VBoxContainer/CanvasContainer"]
+layout_mode = 2
+script = ExtResource("7_canvas")
+
+[node name="BrushControl" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ColorLabel" type="Label" parent="UI/EditorPanel/VBoxContainer/BrushControl"]
+layout_mode = 2
+text = "颜色: "
+
+[node name="BrushColor" type="ColorPickerButton" parent="UI/EditorPanel/VBoxContainer/BrushControl"]
+layout_mode = 2
+size_flags_horizontal = 3
+color = Color(0, 0, 0, 1)
+
+[node name="SizeLabel" type="Label" parent="UI/EditorPanel/VBoxContainer/BrushControl"]
+layout_mode = 2
+text = "大小: "
+
+[node name="BrushSize" type="HSlider" parent="UI/EditorPanel/VBoxContainer/BrushControl"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 2.0
+max_value = 50.0
+value = 12.0
+
+[node name="ActionButtons" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ClearBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/ActionButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "清除画布"
+
+[node name="SaveBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/ActionButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "应用画板"
+
+[node name="ImportButtons" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ImportBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/ImportButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "导入图片"
+
+[node name="DropLabel" type="Label" parent="UI/EditorPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "拖拽本地图片到窗口可直接导入为当前部件"
+horizontal_alignment = 1
+
+[node name="FileDialog" type="FileDialog" parent="UI"]
+title = "选择图片文件"
+size = Vector2i(600, 400)
+ok_button_text = "打开"
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.png ; PNG Images", "*.jpg, *.jpeg ; JPG Images")
+
 [node name="AudioStreamPlayers" type="Node" parent="."]
+
 
