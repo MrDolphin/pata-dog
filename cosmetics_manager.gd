@@ -89,7 +89,7 @@ func update_slot_textures() -> void:
 			node.texture = null
 		else:
 			var file_path = "res://assets/cosmetics/" + item_name + ".png"
-			if FileAccess.file_exists(file_path):
+			if ResourceLoader.exists(file_path):
 				node.texture = load(file_path)
 				var db_item = COSMETICS_DB.get(item_name, null)
 				if db_item:

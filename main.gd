@@ -32,7 +32,8 @@ extends Node2D
 @onready var import_btn = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/ImportButtons/ImportBtn
 @onready var file_dialog = $UI/FileDialog
 @onready var joint_handle = $UI/JointHandle
-@onready var scale_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/ScaleHBox/ScaleSlider
+@onready var scale_x_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/ScaleHBox/ScaleXSlider
+@onready var scale_y_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/ScaleHBox/ScaleYSlider
 @onready var rot_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/RotHBox/RotSlider
 @onready var off_x_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox/OffXSlider
 @onready var off_y_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox/OffYSlider
@@ -130,7 +131,8 @@ func _ready():
 	get_window().files_dropped.connect(_on_files_dropped)
 	joint_handle.gui_input.connect(_on_joint_handle_gui_input)
 	
-	scale_slider.value_changed.connect(_on_transform_changed.bind("scale"))
+	scale_x_slider.value_changed.connect(_on_transform_changed.bind("scale_x"))
+	scale_y_slider.value_changed.connect(_on_transform_changed.bind("scale_y"))
 	rot_slider.value_changed.connect(_on_transform_changed.bind("rot"))
 	off_x_slider.value_changed.connect(_on_transform_changed.bind("off_x"))
 	off_y_slider.value_changed.connect(_on_transform_changed.bind("off_y"))
@@ -530,7 +532,8 @@ func _on_part_selected(index):
 	var selected_node = part_nodes[index]
 	var part_key = str(index)
 	var t_data = SaveManager.part_transforms.get(part_key, {"scale_x":1, "scale_y":1, "rot":0, "off_x":0, "off_y":0})
-	scale_slider.set_value_no_signal(t_data.get("scale_x", 1.0))
+	scale_x_slider.set_value_no_signal(t_data.get("scale_x", 1.0))
+	scale_y_slider.set_value_no_signal(t_data.get("scale_y", 1.0))
 	rot_slider.set_value_no_signal(t_data.get("rot", 0.0))
 	off_x_slider.set_value_no_signal(t_data.get("off_x", 0.0))
 	off_y_slider.set_value_no_signal(t_data.get("off_y", 0.0))
@@ -550,10 +553,12 @@ func _on_transform_changed(value: float, type: String):
 	var part_key = str(idx)
 	var t_data = SaveManager.part_transforms.get(part_key, {"scale_x":1, "scale_y":1, "rot":0, "off_x":0, "off_y":0}).duplicate()
 	
-	if type == "scale":
+	if type == "scale_x":
 		t_data["scale_x"] = value
+		selected_node.scale.x = value
+	elif type == "scale_y":
 		t_data["scale_y"] = value
-		selected_node.scale = Vector2(value, value)
+		selected_node.scale.y = value
 	elif type == "rot":
 		t_data["rot"] = value
 		selected_node.rotation_degrees = value
