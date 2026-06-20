@@ -32,6 +32,10 @@ extends Node2D
 @onready var import_btn = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/ImportButtons/ImportBtn
 @onready var file_dialog = $UI/FileDialog
 @onready var joint_handle = $UI/JointHandle
+@onready var scale_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/TransformControl/ScaleHBox/ScaleSlider
+@onready var rot_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/TransformControl/RotHBox/RotSlider
+@onready var off_x_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/TransformControl/OffHBox/OffXSlider
+@onready var off_y_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/TransformControl/OffHBox/OffYSlider
 
 @onready var progress_label = $UI/ProgressLabel
 @onready var chest_progress_bar = $UI/ChestProgressBar
@@ -120,6 +124,11 @@ func _ready():
 	
 	get_window().files_dropped.connect(_on_files_dropped)
 	joint_handle.gui_input.connect(_on_joint_handle_gui_input)
+	
+	scale_slider.value_changed.connect(_on_transform_changed.bind("scale"))
+	rot_slider.value_changed.connect(_on_transform_changed.bind("rot"))
+	off_x_slider.value_changed.connect(_on_transform_changed.bind("off_x"))
+	off_y_slider.value_changed.connect(_on_transform_changed.bind("off_y"))
 	
 	canvas.set_brush_color(brush_color_btn.color)
 	canvas.set_brush_size(brush_size_slider.value)
@@ -354,6 +363,15 @@ func _on_data_loaded():
 	cosmetics_manager.update_slot_textures()
 	_on_points_changed(SaveManager.total_clicks, SaveManager.current_points)
 	_populate_wardrobe_ui()
+	
+	for idx in range(part_nodes.size()):
+		var part_key = str(idx)
+		if SaveManager.part_transforms.has(part_key):
+			var t_data = SaveManager.part_transforms[part_key]
+			var node = part_nodes[idx]
+			node.scale = Vector2(t_data.get("scale_x", 1.0), t_data.get("scale_y", 1.0))
+			node.rotation_degrees = t_data.get("rot", 0.0)
+			node.position = Vector2(t_data.get("off_x", 0.0), t_data.get("off_y", 0.0))
 
 func _on_points_changed(total: int, current: int):
 	var progress = current % cosmetics_manager.CHEST_COST
@@ -472,6 +490,13 @@ func _on_sound_theme_selected(index: int):
 
 func _on_part_selected(index):
 	var selected_node = part_nodes[index]
+	var part_key = str(index)
+	var t_data = SaveManager.part_transforms.get(part_key, {"scale_x":1, "scale_y":1, "rot":0, "off_x":0, "off_y":0})
+	scale_slider.set_value_no_signal(t_data.get("scale_x", 1.0))
+	rot_slider.set_value_no_signal(t_data.get("rot", 0.0))
+	off_x_slider.set_value_no_signal(t_data.get("off_x", 0.0))
+	off_y_slider.set_value_no_signal(t_data.get("off_y", 0.0))
+	
 	canvas.clear_canvas()
 	if selected_node.texture:
 		var img = selected_node.texture.get_image()
@@ -480,6 +505,29 @@ func _on_part_selected(index):
 			img.resize(canvas.canvas_width, canvas.canvas_height, Image.INTERPOLATE_LANCZOS)
 			canvas.image = img
 			canvas._update_texture()
+
+func _on_transform_changed(value: float, type: String):
+	var idx = part_option.selected
+	var selected_node = part_nodes[idx]
+	var part_key = str(idx)
+	var t_data = SaveManager.part_transforms.get(part_key, {"scale_x":1, "scale_y":1, "rot":0, "off_x":0, "off_y":0}).duplicate()
+	
+	if type == "scale":
+		t_data["scale_x"] = value
+		t_data["scale_y"] = value
+		selected_node.scale = Vector2(value, value)
+	elif type == "rot":
+		t_data["rot"] = value
+		selected_node.rotation_degrees = value
+	elif type == "off_x":
+		t_data["off_x"] = value
+		selected_node.position.x = value
+	elif type == "off_y":
+		t_data["off_y"] = value
+		selected_node.position.y = value
+		
+	SaveManager.part_transforms[part_key] = t_data
+	SaveManager.save()
 
 func _on_brush_color_changed(color):
 	canvas.set_brush_color(color)
