@@ -51,3 +51,16 @@
 * **使用特定场景启动（MainScene）**：`& "F:\hp-laptop\godot\Godot_v4.6.1-stable_win64.exe\Godot_v4.6.1-stable_win64_console.exe" --path . res://Main.tscn`
 * **调试与排查**：在 Godot 编辑器内或通过 Godot 终端输出日志，观察是否有骨骼节点未找到或动画状态机异常。
 
+---
+
+## 4. Git 提交与推送策略 (Git Commit & Push Policy)
+
+* **阶段性提交**：每当完成 `task.md` 中的一个子任务、编写完一个新功能或修复好一个重大 Bug 且本地验证通过后，**必须**执行 Git 提交。
+* **提交命令**：
+  ```bash
+  git add .
+  git commit -m "feat/fix/chore: [具体修改了什么，比如：添加了可爱风格的晃头动画]"
+  git push
+  ```
+* **目的**：确保远程仓库 `https://github.com/MrDolphin/pata-dog` 记录了完整的历史演进过程，方便用户随时回溯、定位不同阶段的代码状态。
+
