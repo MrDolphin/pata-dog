@@ -24,6 +24,53 @@ corner_radius_bottom_left = 10
 offsets = PackedFloat32Array(0, 0.33, 0.66, 1)
 colors = PackedColorArray(1, 0.1, 0.1, 1, 0.1, 0.9, 0.1, 1, 0.1, 0.5, 1, 1, 1, 0.8, 0.1, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_widget"]
+bg_color = Color(0.12, 0.12, 0.14, 0.85)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.2, 0.2, 0.6)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bubble"]
+bg_color = Color(0.85, 0.85, 0.85, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_editor"]
+bg_color = Color(0.08, 0.08, 0.1, 0.92)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.3, 0.35, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.4)
+shadow_size = 15
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_popup"]
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.2, 0.2, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.6)
+shadow_size = 20
+
 [node name="Main" type="Node2D" unique_id=1982947122]
 
 script = ExtResource("1_abcde")
@@ -123,85 +170,154 @@ color_ramp = SubResource("Gradient_particles")
 [node name="UI" type="CanvasLayer" parent="." unique_id=883840219]
 
 
-[node name="BottomBar" type="HBoxContainer" parent="UI"]
-anchors_preset = 12
+[node name="FloatingWidget" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 3
+anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -160.0
 offset_top = -60.0
-offset_bottom = -10.0
-grow_horizontal = 2
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 0
 grow_vertical = 0
-alignment = 1
 
-[node name="LeftSpacer" type="Control" parent="UI/BottomBar"]
-layout_mode = 2
-custom_minimum_size = Vector2(20, 0)
-
-[node name="ToggleEditorBtn" type="Button" parent="UI/BottomBar" unique_id=282002418]
-custom_minimum_size = Vector2(100, 35)
-layout_mode = 2
-size_flags_vertical = 4
-text = "⚙️ 配置桌宠"
-
-[node name="MiddleSpacer" type="Control" parent="UI/BottomBar"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="ProgressVBox" type="VBoxContainer" parent="UI/BottomBar"]
-layout_mode = 2
-alignment = 1
-
-[node name="ProgressLabel" type="Label" parent="UI/BottomBar/ProgressVBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 13
-text = "打字数: 0 | 宝箱进度: 0/1000"
-horizontal_alignment = 2
-
-[node name="ChestProgressBar" type="ProgressBar" parent="UI/BottomBar/ProgressVBox"]
-custom_minimum_size = Vector2(200, 10)
-layout_mode = 2
-max_value = 1000.0
-step = 1.0
-value = 0.0
-show_percentage = false
-
-[node name="ChestButtonContainer" type="CenterContainer" parent="UI/BottomBar"]
-custom_minimum_size = Vector2(140, 0)
-layout_mode = 2
-
-[node name="ChestButtonPivot" type="Control" parent="UI/BottomBar/ChestButtonContainer"]
-layout_mode = 2
-
-[node name="ChestButton" type="Button" parent="UI/BottomBar/ChestButtonContainer/ChestButtonPivot"]
-visible = false
+[node name="WidgetPanel" type="PanelContainer" parent="UI/FloatingWidget"]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -70.0
-offset_top = -25.0
-offset_right = 70.0
-offset_bottom = 25.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-pivot_offset = Vector2(70, 25)
-theme_override_colors/font_color = Color(1, 0.9, 0.2, 1)
-theme_override_font_sizes/font_size = 18
-text = "🎁 点击开箱!"
+theme_override_styles/panel = SubResource("StyleBoxFlat_widget")
 
-[node name="RightSpacer" type="Control" parent="UI/BottomBar"]
+[node name="HBox" type="HBoxContainer" parent="UI/FloatingWidget/WidgetPanel"]
 layout_mode = 2
-custom_minimum_size = Vector2(20, 0)
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="KeystrokesLabel" type="Label" parent="UI/FloatingWidget/WidgetPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 18
+text = "0"
+horizontal_alignment = 1
+
+[node name="ToggleEditorBtn" type="Button" parent="UI/FloatingWidget/WidgetPanel/HBox" unique_id=282002418]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "≡"
+
+[node name="ChestBubble" type="Control" parent="UI/FloatingWidget"]
+visible = false
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -30.0
+offset_top = -65.0
+offset_right = 30.0
+offset_bottom = -5.0
+grow_horizontal = 2
+
+[node name="BubblePanel" type="Panel" parent="UI/FloatingWidget/ChestBubble"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bubble")
+
+[node name="VBox" type="VBoxContainer" parent="UI/FloatingWidget/ChestBubble"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = -5
+alignment = 1
+
+[node name="Icon" type="Label" parent="UI/FloatingWidget/ChestBubble/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "🎁"
+horizontal_alignment = 1
+
+[node name="Count" type="Label" parent="UI/FloatingWidget/ChestBubble/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 14
+text = "1"
+horizontal_alignment = 1
+
+[node name="ChestButton" type="Button" parent="UI/FloatingWidget/ChestBubble"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+flat = true
+focus_mode = 0
+
+[node name="UnlockPopup" type="Control" parent="UI"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="UI/UnlockPopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PopupPanel" type="Panel" parent="UI/UnlockPopup/CenterContainer"]
+custom_minimum_size = Vector2(200, 240)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_popup")
+
+[node name="VBox" type="VBoxContainer" parent="UI/UnlockPopup/CenterContainer/PopupPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="ItemIcon" type="TextureRect" parent="UI/UnlockPopup/CenterContainer/PopupPanel/VBox"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ItemName" type="Label" parent="UI/UnlockPopup/CenterContainer/PopupPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 20
+text = "NEW ITEM"
+horizontal_alignment = 1
 
 [node name="EditorPanel" type="Panel" parent="UI" unique_id=174447156]
 visible = false
 offset_left = 20.0
-offset_top = 70.0
+offset_top = 20.0
 offset_right = 360.0
-offset_bottom = 580.0
+offset_bottom = 530.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_editor")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="UI/EditorPanel" unique_id=43373736]
 layout_mode = 1

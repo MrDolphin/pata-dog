@@ -19,7 +19,7 @@ extends Node2D
 @onready var left_prop_slot = $Mascot/LeftPawJoint/PropSlot
 @onready var right_prop_slot = $Mascot/RightPawJoint/PropSlot
 
-@onready var toggle_editor_btn = $UI/BottomBar/ToggleEditorBtn
+@onready var toggle_editor_btn = $UI/FloatingWidget/WidgetPanel/HBox/ToggleEditorBtn
 @onready var editor_panel = $UI/EditorPanel
 @onready var style_option = $UI/EditorPanel/VBoxContainer/StyleHBox/StyleOption
 @onready var sound_option = $UI/EditorPanel/VBoxContainer/SoundThemeHBox/SoundOption
@@ -38,9 +38,14 @@ extends Node2D
 @onready var off_x_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox/OffXSlider
 @onready var off_y_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox/OffYSlider
 
-@onready var progress_label = $UI/BottomBar/ProgressVBox/ProgressLabel
-@onready var chest_progress_bar = $UI/BottomBar/ProgressVBox/ChestProgressBar
-@onready var chest_button = $UI/BottomBar/ChestButtonContainer/ChestButtonPivot/ChestButton
+@onready var keystrokes_label = $UI/FloatingWidget/WidgetPanel/HBox/KeystrokesLabel
+@onready var chest_bubble = $UI/FloatingWidget/ChestBubble
+@onready var chest_count_label = $UI/FloatingWidget/ChestBubble/VBox/Count
+@onready var chest_button = $UI/FloatingWidget/ChestBubble/ChestButton
+
+@onready var unlock_popup = $UI/UnlockPopup
+@onready var unlock_item_icon = $UI/UnlockPopup/CenterContainer/PopupPanel/VBox/ItemIcon
+@onready var unlock_item_name = $UI/UnlockPopup/CenterContainer/PopupPanel/VBox/ItemName
 @onready var chest_particles = $ChestParticles
 @onready var wardrobe_grid = $UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox/WardrobeGrid
 
@@ -414,27 +419,25 @@ func _update_audio_list():
 		audio_list.add_item(p.get_file())
 
 func _on_points_changed(total: int, current: int):
-	var progress = current % cosmetics_manager.CHEST_COST
-	progress_label.text = "打字数: %d | 宝箱进度: %d/%d" % [total, progress, cosmetics_manager.CHEST_COST]
-	chest_progress_bar.max_value = cosmetics_manager.CHEST_COST
-	chest_progress_bar.value = progress
-	
-	if current >= cosmetics_manager.CHEST_COST and cosmetics_manager.has_locked_items():
-		chest_button.visible = true
+	keystrokes_label.text = str(total)
+	var available_chests = SaveManager.current_points / cosmetics_manager.CHEST_COST
+	if available_chests > 0 and cosmetics_manager.has_locked_items():
+		chest_bubble.visible = true
+		chest_count_label.text = str(available_chests)
 		_start_chest_shake()
 	else:
-		chest_button.visible = false
+		chest_bubble.visible = false
 		if chest_shake_tween:
 			chest_shake_tween.kill()
-		chest_button.rotation = 0.0
+		chest_bubble.rotation = 0.0
 
 func _start_chest_shake():
 	if chest_shake_tween and chest_shake_tween.is_valid():
 		return
 	chest_shake_tween = create_tween().set_loops()
-	chest_shake_tween.tween_property(chest_button, "rotation", 0.08, 0.05)
-	chest_shake_tween.tween_property(chest_button, "rotation", -0.08, 0.1).set_delay(0.05)
-	chest_shake_tween.tween_property(chest_button, "rotation", 0.0, 0.05).set_delay(0.15)
+	chest_shake_tween.tween_property(chest_bubble, "rotation", 0.08, 0.05)
+	chest_shake_tween.tween_property(chest_bubble, "rotation", -0.08, 0.1).set_delay(0.05)
+	chest_shake_tween.tween_property(chest_bubble, "rotation", 0.0, 0.05).set_delay(0.15)
 	chest_shake_tween.tween_interval(1.5)
 
 func _on_chest_button_pressed():
@@ -443,36 +446,42 @@ func _on_chest_button_pressed():
 	var item_unlocked = cosmetics_manager.try_open_chest()
 	if item_unlocked != "":
 		SaveManager.spend_points(cosmetics_manager.CHEST_COST)
-		var item_name = cosmetics_manager.get_db()[item_unlocked]["name"]
-		_show_unlock_popup(item_name)
+		var db = cosmetics_manager.get_db()
+		var item_name = db[item_unlocked]["name"]
+		var tex_path = "res://assets/cosmetics/" + item_unlocked + ".png"
+		_show_unlock_popup(item_name, tex_path)
 	else:
-		_show_unlock_popup("所有饰品已解锁！点数已转换为积分。")
+		_show_unlock_popup("所有饰品已解锁", "")
 		
 	chest_particles.restart()
 	chest_particles.emitting = true
 	SoundManager.play_tap(0.5)
 	SoundManager.play_click(0.5)
 	
+	_on_points_changed(SaveManager.total_points, SaveManager.current_points)
 	_populate_wardrobe_ui()
 
-func _show_unlock_popup(text_msg: String):
-	var popup_label = Label.new()
-	popup_label.text = "🎉 " + text_msg
-	popup_label.add_theme_font_size_override("font_size", 20)
-	popup_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	popup_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	popup_label.size = Vector2(400, 50)
-	popup_label.position = Vector2(200, 275)
-	popup_label.pivot_offset = Vector2(200, 25)
-	popup_label.scale = Vector2.ZERO
-	$UI.add_child(popup_label)
+func _show_unlock_popup(text_msg: String, texture_path: String):
+	unlock_item_name.text = "NEW ITEM: " + text_msg
+	if texture_path != "" and ResourceLoader.exists(texture_path):
+		unlock_item_icon.texture = load(texture_path)
+	else:
+		unlock_item_icon.texture = null
+		
+	unlock_popup.visible = true
+	unlock_popup.modulate.a = 0.0
+	var popup_panel = unlock_popup.get_node("CenterContainer/PopupPanel")
+	popup_panel.scale = Vector2.ZERO
+	popup_panel.pivot_offset = popup_panel.custom_minimum_size / 2.0
 	
 	var t = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	t.tween_property(popup_label, "scale", Vector2.ONE, 0.3)
-	t.tween_property(popup_label, "position:y", 220.0, 0.8).set_delay(0.2)
-	t.parallel().tween_property(popup_label, "modulate:a", 0.0, 0.8).set_delay(0.2)
+	t.tween_property(unlock_popup, "modulate:a", 1.0, 0.2)
+	t.parallel().tween_property(popup_panel, "scale", Vector2.ONE, 0.4)
+	
+	t.tween_interval(1.5)
+	t.tween_property(unlock_popup, "modulate:a", 0.0, 0.3)
 	t.finished.connect(func():
-		popup_label.queue_free()
+		unlock_popup.visible = false
 	)
 
 func _populate_wardrobe_ui():
