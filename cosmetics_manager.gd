@@ -9,12 +9,12 @@ signal all_items_unlocked
 # ─── Cosmetics Database ──────────────────────────────────────
 
 const COSMETICS_DB: Dictionary = {
-	"hat_red": {"name": "红帽子", "slot": "hat", "icon": "🎩"},
-	"hat_crown": {"name": "金皇冠", "slot": "hat", "icon": "👑"},
-	"glasses_cool": {"name": "太阳镜", "slot": "glasses", "icon": "🕶️"},
-	"accessory_bowtie": {"name": "小领结", "slot": "bowtie", "icon": "🎀"},
-	"accessory_necklace": {"name": "铃铛项圈", "slot": "necklace", "icon": "🔔"},
-	"prop_mic": {"name": "麦克风", "slot": "left_prop", "icon": "🎤"},
+	"hat_red": {"name": "红帽子", "slot": "hat", "icon": "🎩", "scale": Vector2(0.25, 0.25), "offset": Vector2(0, -50)},
+	"hat_crown": {"name": "金皇冠", "slot": "hat", "icon": "👑", "scale": Vector2(0.2, 0.2), "offset": Vector2(0, -60)},
+	"glasses_cool": {"name": "太阳镜", "slot": "glasses", "icon": "🕶️", "scale": Vector2(0.2, 0.2), "offset": Vector2(0, -10)},
+	"accessory_bowtie": {"name": "小领结", "slot": "bowtie", "icon": "🎀", "scale": Vector2(0.15, 0.15), "offset": Vector2(0, 30)},
+	"accessory_necklace": {"name": "铃铛项圈", "slot": "necklace", "icon": "🔔", "scale": Vector2(0.2, 0.2), "offset": Vector2(0, 10)},
+	"prop_mic": {"name": "麦克风", "slot": "left_prop", "icon": "🎤", "scale": Vector2(0.25, 0.25), "offset": Vector2(0, -20)},
 }
 
 const CHEST_COST: int = 10
@@ -91,6 +91,10 @@ func update_slot_textures() -> void:
 			var file_path = "res://assets/cosmetics/" + item_name + ".png"
 			if FileAccess.file_exists(file_path):
 				node.texture = load(file_path)
+				var db_item = COSMETICS_DB.get(item_name, null)
+				if db_item:
+					node.scale = db_item.get("scale", Vector2.ONE)
+					node.position = db_item.get("offset", Vector2.ZERO)
 			else:
 				node.texture = null
 	slots_updated.emit()
