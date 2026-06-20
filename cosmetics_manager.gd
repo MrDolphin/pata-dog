@@ -17,7 +17,7 @@ const COSMETICS_DB: Dictionary = {
 	"prop_mic": {"name": "麦克风", "slot": "left_prop", "icon": "🎤"},
 }
 
-const CHEST_COST: int = 1000
+const CHEST_COST: int = 10
 
 # ─── Slot Node References (set by main.gd) ───────────────────
 
