@@ -23,6 +23,8 @@ var equipped_cosmetics: Dictionary = {
 	"right_prop": ""
 }
 var sound_theme: int = 0
+var part_transforms: Dictionary = {}
+var custom_audio_paths: Array = []
 
 # ─── Internal ─────────────────────────────────────────────────
 
@@ -79,7 +81,9 @@ func save() -> void:
 			"current_points": current_points,
 			"unlocked_cosmetics": unlocked_cosmetics,
 			"equipped_cosmetics": equipped_cosmetics,
-			"sound_theme": sound_theme
+			"sound_theme": sound_theme,
+			"part_transforms": part_transforms,
+			"custom_audio_paths": custom_audio_paths
 		}
 		file.store_string(JSON.stringify(data, "\t"))
 		file.close()
@@ -104,6 +108,8 @@ func load_data() -> void:
 			current_points = data.get("current_points", 0)
 			unlocked_cosmetics = data.get("unlocked_cosmetics", ["default"])
 			sound_theme = data.get("sound_theme", 0)
+			part_transforms = data.get("part_transforms", {})
+			custom_audio_paths = data.get("custom_audio_paths", [])
 			var equipped = data.get("equipped_cosmetics", {})
 			for slot in equipped_cosmetics.keys():
 				if equipped.has(slot):
