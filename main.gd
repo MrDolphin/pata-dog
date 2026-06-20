@@ -89,12 +89,34 @@ func _ready():
 func _process(delta):
 	excitement = max(0.0, excitement - delta * 2.0)
 	var time = Time.get_ticks_msec() / 1000.0
-	var speed = 5.0 + excitement * 15.0
-	tail_joint.rotation = -0.5 + sin(time * speed) * (0.2 + excitement * 0.5)
 	
-	# 让整个身体做极其轻微的回弹晃动
-	body_joint.rotation = lerp_angle(body_joint.rotation, 0.0, delta * 15.0)
-	
+	if current_style == "cute":
+		var speed = 5.0 + excitement * 15.0
+		tail_joint.rotation = -0.5 + sin(time * speed) * (0.2 + excitement * 0.5)
+		
+		# Smooth breathing/sway
+		body_joint.rotation = lerp_angle(body_joint.rotation, 0.0, delta * 15.0)
+		body_joint.position.y = lerp(body_joint.position.y, 350.0 + sin(time * 3.0) * 4.0, delta * 10.0)
+		body_joint.position.x = lerp(body_joint.position.x, 400.0, delta * 10.0)
+		
+		head_joint.rotation = lerp_angle(head_joint.rotation, sin(time * 2.0) * 0.05, delta * 10.0)
+		head_joint.position = lerp(head_joint.position, Vector2(0, -100), delta * 10.0)
+		
+		tail.scale = lerp(tail.scale, Vector2.ONE, delta * 10.0)
+		
+	else: # bizarre (鬼畜) style
+		var speed = 25.0 + excitement * 50.0
+		tail_joint.rotation = -0.5 + sin(time * speed) * (0.8 + excitement * 1.5) + randf_range(-0.1, 0.1)
+		tail.scale = Vector2(1.0, 1.0) + Vector2(randf_range(-0.3, 0.3), randf_range(-0.3, 0.3))
+		
+		# Jittery body
+		body_joint.rotation = lerp_angle(body_joint.rotation, randf_range(-0.2, 0.2), delta * 40.0)
+		body_joint.position = Vector2(400, 350) + Vector2(randf_range(-8, 8), randf_range(-8, 8))
+		
+		# Twitching head
+		head_joint.rotation = lerp_angle(head_joint.rotation, sin(time * 60.0) * 0.2 + randf_range(-0.1, 0.1), delta * 40.0)
+		head_joint.position = Vector2(0, -100) + Vector2(randf_range(-15, 15), randf_range(-15, 15))
+
 	# Update Joint Handle position if editor is open
 	if editor_panel.visible:
 		joint_handle.visible = true
@@ -104,9 +126,13 @@ func _process(delta):
 	else:
 		joint_handle.visible = false
 
+var left_paw_tween: Tween = null
+var right_paw_tween: Tween = null
+var head_tween: Tween = null
+var body_tween: Tween = null
 
 func _input(event):
-	# 窗口拖拽
+	# 窗口拖拽 (中键)
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_MIDDLE:
 		if event.pressed:
 			dragging_window = true
@@ -118,6 +144,10 @@ func _input(event):
 		DisplayServer.window_set_position(DisplayServer.window_get_position() + Vector2i(event.position - drag_offset))
 		return
 		
+	# 如果正在拖动骨骼点，不触发交互动画
+	if dragging_joint:
+		return
+		
 	# 键盘检测
 	if event is InputEventKey:
 		if event.pressed and not event.echo:
@@ -125,64 +155,154 @@ func _input(event):
 				_bark()
 				_paw_down("both")
 			else:
-				if use_left_paw:
-					_paw_down("left")
-				else:
-					_paw_down("right")
-				use_left_paw = !use_left_paw
-				_tap_sound()
-				_add_excitement()
-		elif not event.pressed:
-			_reset_paws()
+				_trigger_alternate_wave()
 	
-	# 鼠标左右键检测
+	# 鼠标检测
 	elif event is InputEventMouseButton and not dragging_window:
 		if event.pressed:
-			if event.button_index == MOUSE_BUTTON_LEFT:
-				_paw_down("left")
-				_tap_sound()
-				_add_excitement()
-			elif event.button_index == MOUSE_BUTTON_RIGHT:
-				_paw_down("right")
-				_tap_sound()
-				_add_excitement()
-		else:
-			if event.button_index == MOUSE_BUTTON_LEFT:
-				left_paw_up.visible = true
-				left_paw_down.visible = false
-			elif event.button_index == MOUSE_BUTTON_RIGHT:
-				right_paw_up.visible = true
-				right_paw_down.visible = false
-				
-	# 鼠标移动时微晃身体
-	elif event is InputEventMouseMotion:
-		body_joint.rotation = clamp(event.relative.x * 0.005, -0.2, 0.2)
+			# 过滤编辑器区域的点击
+			if editor_panel.visible and event.position.x < 380:
+				return
+			
+			if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT:
+				_trigger_alternate_wave()
+
+func _trigger_alternate_wave():
+	if use_left_paw:
+		_paw_down("left")
+	else:
+		_paw_down("right")
+	use_left_paw = !use_left_paw
 
 func _paw_down(side):
+	_add_excitement()
+	_tap_sound()
+	
+	if current_style == "cute":
+		_paw_down_cute(side)
+	else:
+		_paw_down_bizarre(side)
+
+func _paw_down_cute(side):
 	if side == "left" or side == "both":
 		left_paw_up.visible = false
 		left_paw_down.visible = true
+		
+		if left_paw_tween:
+			left_paw_tween.kill()
+		left_paw_tween = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		left_paw_tween.tween_property(left_paw_joint, "rotation", 0.4, 0.08)
+		left_paw_tween.tween_property(left_paw_joint, "rotation", 0.0, 0.12).set_delay(0.05)
+		left_paw_tween.finished.connect(func(): 
+			left_paw_up.visible = true
+			left_paw_down.visible = false
+		)
+		
+		# Gentle head shake opposite side
+		if head_tween:
+			head_tween.kill()
+		head_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		head_tween.tween_property(head_joint, "rotation", -0.15, 0.08)
+		head_tween.tween_property(head_joint, "rotation", 0.0, 0.12)
+		
 	if side == "right" or side == "both":
 		right_paw_up.visible = false
 		right_paw_down.visible = true
+		
+		if right_paw_tween:
+			right_paw_tween.kill()
+		right_paw_tween = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		right_paw_tween.tween_property(right_paw_joint, "rotation", -0.4, 0.08)
+		right_paw_tween.tween_property(right_paw_joint, "rotation", 0.0, 0.12).set_delay(0.05)
+		right_paw_tween.finished.connect(func(): 
+			right_paw_up.visible = true
+			right_paw_down.visible = false
+		)
+		
+		# Gentle head shake opposite side
+		if head_tween:
+			head_tween.kill()
+		head_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		head_tween.tween_property(head_joint, "rotation", 0.15, 0.08)
+		head_tween.tween_property(head_joint, "rotation", 0.0, 0.12)
+
+	# Body recoil
+	if body_tween:
+		body_tween.kill()
+	body_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	body_tween.tween_property(body_joint, "position:y", 355.0, 0.05)
+	body_tween.tween_property(body_joint, "position:y", 350.0, 0.1)
+
+func _paw_down_bizarre(side):
+	if side == "left" or side == "both":
+		left_paw_up.visible = false
+		left_paw_down.visible = true
+		
+		if left_paw_tween:
+			left_paw_tween.kill()
+		left_paw_tween = create_tween().set_parallel(true)
+		left_paw_tween.tween_property(left_paw_joint, "rotation", 1.8, 0.05)
+		left_paw_tween.tween_property(left_paw_joint, "scale", Vector2(2.5, 0.4), 0.05)
+		
+		var t2 = create_tween().set_parallel(true)
+		t2.tween_property(left_paw_joint, "rotation", 0.0, 0.08).set_delay(0.06)
+		t2.tween_property(left_paw_joint, "scale", Vector2(1.0, 1.0), 0.08).set_delay(0.06)
+		t2.finished.connect(func(): 
+			left_paw_up.visible = true
+			left_paw_down.visible = false
+		)
+		
+	if side == "right" or side == "both":
+		right_paw_up.visible = false
+		right_paw_down.visible = true
+		
+		if right_paw_tween:
+			right_paw_tween.kill()
+		right_paw_tween = create_tween().set_parallel(true)
+		right_paw_tween.tween_property(right_paw_joint, "rotation", -1.8, 0.05)
+		right_paw_tween.tween_property(right_paw_joint, "scale", Vector2(2.5, 0.4), 0.05)
+		
+		var t2 = create_tween().set_parallel(true)
+		t2.tween_property(right_paw_joint, "rotation", 0.0, 0.08).set_delay(0.06)
+		t2.tween_property(right_paw_joint, "scale", Vector2(1.0, 1.0), 0.08).set_delay(0.06)
+		t2.finished.connect(func(): 
+			right_paw_up.visible = true
+			right_paw_down.visible = false
+		)
+
+	# Violent head spin
+	if head_tween:
+		head_tween.kill()
+	head_tween = create_tween().set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	head_tween.tween_property(head_joint, "rotation", randf_range(-PI * 1.5, PI * 1.5), 0.05)
+	head_tween.tween_property(head_joint, "rotation", 0.0, 0.1)
 	
-	body_joint.rotation = randf_range(-0.1, 0.1)
+	# Violent body bounce
+	body_joint.position = Vector2(400, 350) + Vector2(randf_range(-25, 25), randf_range(-25, 25))
+	body_joint.rotation = randf_range(-0.4, 0.4)
 
 func _reset_paws():
 	left_paw_up.visible = true
 	left_paw_down.visible = false
 	right_paw_up.visible = true
 	right_paw_down.visible = false
+	
+	if left_paw_tween: left_paw_tween.kill()
+	if right_paw_tween: right_paw_tween.kill()
+	
+	left_paw_joint.rotation = 0.0
+	left_paw_joint.scale = Vector2.ONE
+	right_paw_joint.rotation = 0.0
+	right_paw_joint.scale = Vector2.ONE
 
 func _add_excitement():
-	excitement = min(1.0, excitement + 0.1)
+	excitement = min(1.0, excitement + 0.15)
 
 # Editor Event Handlers
 func _on_toggle_editor_btn_pressed():
 	editor_panel.visible = !editor_panel.visible
 	if editor_panel.visible:
 		toggle_editor_btn.text = "❌ 关闭配置"
-		# Preload current active part to canvas when opening
 		_on_part_selected(part_option.selected)
 	else:
 		toggle_editor_btn.text = "⚙️ 配置桌宠"
@@ -196,7 +316,6 @@ func _on_part_selected(index):
 	if selected_node.texture:
 		var img = selected_node.texture.get_image()
 		if img:
-			# Ensure image format is correct for updating
 			img.convert(Image.FORMAT_RGBA8)
 			img.resize(canvas.canvas_width, canvas.canvas_height, Image.INTERPOLATE_LANCZOS)
 			canvas.image = img
@@ -213,7 +332,6 @@ func _on_clear_btn_pressed():
 
 func _on_save_btn_pressed():
 	var drawn_img = canvas.get_drawn_image()
-	# Save a duplicate to avoid editing the reference directly
 	var img_dup = Image.create_from_data(drawn_img.get_width(), drawn_img.get_height(), drawn_img.has_mipmaps(), drawn_img.get_format(), drawn_img.get_data())
 	var tex = ImageTexture.create_from_image(img_dup)
 	var selected_node = part_nodes[part_option.selected]
@@ -233,12 +351,10 @@ func _load_image_to_part(path: String):
 	var loaded_img = Image.load_from_file(path)
 	if loaded_img:
 		loaded_img.convert(Image.FORMAT_RGBA8)
-		# Update sprite texture
 		var tex = ImageTexture.create_from_image(loaded_img)
 		var selected_node = part_nodes[part_option.selected]
 		selected_node.texture = tex
 		
-		# Also update drawing canvas image with imported texture
 		canvas.clear_canvas()
 		var img_for_canvas = Image.create_from_data(loaded_img.get_width(), loaded_img.get_height(), loaded_img.has_mipmaps(), loaded_img.get_format(), loaded_img.get_data())
 		img_for_canvas.resize(canvas.canvas_width, canvas.canvas_height, Image.INTERPOLATE_LANCZOS)
@@ -274,4 +390,5 @@ func _on_joint_handle_gui_input(event):
 		var active_joint = _get_current_joint()
 		if active_joint:
 			active_joint.global_position = get_global_mouse_position()
+
 
