@@ -19,6 +19,12 @@ run/main_scene="res://Main.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://assets/body.png"
 
+[autoload]
+
+SaveManager="*res://save_manager.gd"
+SoundManager="*res://sound_manager.gd"
+GlobalHookManager="*res://global_hook_manager.gd"
+
 [display]
 
 window/size/viewport_width=800
