@@ -24,9 +24,12 @@ extends Node2D
 @onready var save_btn = $UI/EditorPanel/VBoxContainer/ActionButtons/SaveBtn
 @onready var import_btn = $UI/EditorPanel/VBoxContainer/ImportButtons/ImportBtn
 @onready var file_dialog = $UI/FileDialog
+@onready var joint_handle = $UI/JointHandle
 
 var use_left_paw = true
 var excitement = 0.0
+var dragging_joint = false
+
 
 var dragging_window = false
 var drag_offset = Vector2.ZERO
@@ -73,6 +76,7 @@ func _ready():
 	file_dialog.file_selected.connect(_on_file_selected)
 	
 	get_window().files_dropped.connect(_on_files_dropped)
+	joint_handle.gui_input.connect(_on_joint_handle_gui_input)
 	
 	# Initialize brush
 	canvas.set_brush_color(brush_color_btn.color)
@@ -80,6 +84,7 @@ func _ready():
 	
 	# Load head default (empty) to canvas
 	_on_part_selected(0)
+
 
 func _process(delta):
 	excitement = max(0.0, excitement - delta * 2.0)
@@ -89,6 +94,16 @@ func _process(delta):
 	
 	# 让整个身体做极其轻微的回弹晃动
 	body_joint.rotation = lerp_angle(body_joint.rotation, 0.0, delta * 15.0)
+	
+	# Update Joint Handle position if editor is open
+	if editor_panel.visible:
+		joint_handle.visible = true
+		var active_joint = _get_current_joint()
+		if active_joint:
+			joint_handle.global_position = active_joint.global_position - joint_handle.size / 2.0
+	else:
+		joint_handle.visible = false
+
 
 func _input(event):
 	# 窗口拖拽
@@ -235,3 +250,28 @@ func _tap_sound():
 
 func _bark():
 	pass
+
+# Helper to retrieve active joint node
+func _get_current_joint() -> Node2D:
+	var idx = part_option.selected
+	match idx:
+		0: return head_joint
+		1: return body_joint
+		2, 3: return left_paw_joint
+		4, 5: return right_paw_joint
+		6: return tail_joint
+	return null
+
+# Handle dragging of joint handle
+func _on_joint_handle_gui_input(event):
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				dragging_joint = true
+			else:
+				dragging_joint = false
+	elif event is InputEventMouseMotion and dragging_joint:
+		var active_joint = _get_current_joint()
+		if active_joint:
+			active_joint.global_position = get_global_mouse_position()
+

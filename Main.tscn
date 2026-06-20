@@ -1,5 +1,5 @@
 
-[gd_scene load_steps=8 format=3 uid="uid://cxabjeb0bth6q"]
+[gd_scene load_steps=9 format=3 uid="uid://cxabjeb0bth6q"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_abcde"]
 [ext_resource type="Texture2D" path="res://assets/body.svg" id="2_body"]
@@ -8,6 +8,19 @@
 [ext_resource type="Texture2D" path="res://assets/paw_down.svg" id="5_pawdown"]
 [ext_resource type="Texture2D" path="res://assets/tail.svg" id="6_tail"]
 [ext_resource type="Script" path="res://drawing_canvas.gd" id="7_canvas"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_handle"]
+bg_color = Color(0, 0.9, 0.1, 0.8)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_abcde")
@@ -187,6 +200,13 @@ ok_button_text = "打开"
 file_mode = 0
 access = 2
 filters = PackedStringArray("*.png ; PNG Images", "*.jpg, *.jpeg ; JPG Images")
+
+[node name="JointHandle" type="Panel" parent="UI"]
+visible = false
+custom_minimum_size = Vector2(20, 20)
+offset_right = 20.0
+offset_bottom = 20.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_handle")
 
 [node name="AudioStreamPlayers" type="Node" parent="."]
 
