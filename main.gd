@@ -54,6 +54,7 @@ var right_paw_tween: Tween = null
 var head_tween: Tween = null
 var body_tween: Tween = null
 var chest_shake_tween: Tween = null
+var context_menu: PopupMenu = null
 
 var cosmetics_manager = null
 
@@ -125,6 +126,12 @@ func _ready():
 	
 	chest_button.pressed.connect(_on_chest_button_pressed)
 	
+	context_menu = PopupMenu.new()
+	context_menu.add_item("最小化 (Minimize)", 0)
+	context_menu.add_item("退出 (Exit)", 1)
+	context_menu.id_pressed.connect(_on_context_menu_id_pressed)
+	$UI.add_child(context_menu)
+	
 	_on_part_selected(0)
 	
 	# Load initial data state
@@ -195,8 +202,17 @@ func _input(event):
 		if event.pressed:
 			if editor_panel.visible and event.position.x < 380:
 				return
-			if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT:
+			if event.button_index == MOUSE_BUTTON_RIGHT:
+				context_menu.position = Vector2i(get_viewport().get_mouse_position()) + DisplayServer.window_get_position()
+				context_menu.popup()
+			elif event.button_index == MOUSE_BUTTON_LEFT:
 				_trigger_alternate_wave(false)
+
+func _on_context_menu_id_pressed(id: int):
+	if id == 0:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MINIMIZED)
+	elif id == 1:
+		get_tree().root.propagate_notification(NOTIFICATION_WM_CLOSE_REQUEST)
 
 func _on_global_key_pressed():
 	if not get_window().has_focus():
