@@ -1,0 +1,6 @@
+<svg width="40" height="150" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dog tail -->
+  <!-- We put the origin approximately at the bottom/middle in Godot, 
+       but for SVG we just draw the blob -->
+  <path d="M 5 140 C -10 80, 0 20, 20 10 C 40 20, 50 80, 35 140" fill="white" stroke="#333333" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

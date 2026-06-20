@@ -1,0 +1,47 @@
+[gd_scene load_steps=7 format=3 uid="uid://cxabjeb0bth6q"]
+
+[ext_resource type="Script" path="res://main.gd" id="1_abcde"]
+[ext_resource type="Texture2D" path="res://assets/body.svg" id="2_body"]
+[ext_resource type="Texture2D" path="res://assets/desk_kbd.svg" id="3_desk"]
+[ext_resource type="Texture2D" path="res://assets/paw_up.svg" id="4_pawup"]
+[ext_resource type="Texture2D" path="res://assets/paw_down.svg" id="5_pawdown"]
+[ext_resource type="Texture2D" path="res://assets/tail.svg" id="6_tail"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_abcde")
+
+[node name="Tail" type="Sprite2D" parent="."]
+position = Vector2(280, 420)
+rotation = -0.5
+texture = ExtResource("6_tail")
+offset = Vector2(0, -75)
+
+[node name="Instrument" type="Sprite2D" parent="."]
+position = Vector2(400, 450)
+texture = ExtResource("3_desk")
+
+[node name="Body" type="Sprite2D" parent="."]
+position = Vector2(400, 350)
+texture = ExtResource("2_body")
+
+[node name="LeftPawUp" type="Sprite2D" parent="."]
+position = Vector2(240, 340)
+texture = ExtResource("4_pawup")
+
+[node name="LeftPawDown" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(270, 370)
+texture = ExtResource("5_pawdown")
+
+[node name="RightPawUp" type="Sprite2D" parent="."]
+position = Vector2(560, 340)
+texture = ExtResource("4_pawup")
+flip_h = true
+
+[node name="RightPawDown" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(530, 370)
+texture = ExtResource("5_pawdown")
+flip_h = true
+
+[node name="AudioStreamPlayers" type="Node" parent="."]

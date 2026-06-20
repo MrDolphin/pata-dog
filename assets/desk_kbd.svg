@@ -1,0 +1,19 @@
+<svg width="600" height="200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Desk surface line -->
+  <path d="M 0 100 L 600 100" stroke="#333333" stroke-width="12" stroke-linecap="round"/>
+  
+  <!-- Keyboard Box -->
+  <rect x="150" y="70" width="220" height="30" rx="5" fill="#ffffff" stroke="#333333" stroke-width="8"/>
+  
+  <!-- Some abstract key blocks -->
+  <rect x="160" y="78" width="20" height="15" fill="#f0f0f0" stroke="#333333" stroke-width="4"/>
+  <rect x="185" y="78" width="20" height="15" fill="#f0f0f0" stroke="#333333" stroke-width="4"/>
+  <rect x="210" y="78" width="80" height="15" fill="#f0f0f0" stroke="#333333" stroke-width="4"/>
+  <rect x="295" y="78" width="20" height="15" fill="#f0f0f0" stroke="#333333" stroke-width="4"/>
+  <rect x="320" y="78" width="40" height="15" fill="#f0f0f0" stroke="#333333" stroke-width="4"/>
+
+  <!-- Mouse -->
+  <path d="M 410 90 C 410 70, 440 70, 440 90 Z" fill="#ffffff" stroke="#333333" stroke-width="8" stroke-linejoin="round"/>
+  <!-- Mouse line -->
+  <path d="M 425 76 L 425 90" stroke="#333333" stroke-width="4" stroke-linecap="round"/>
+</svg>
