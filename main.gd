@@ -37,7 +37,6 @@ extends Node2D
 @onready var chest_particles = $ChestParticles
 @onready var wardrobe_grid = $UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox/WardrobeGrid
 
-
 var use_left_paw = true
 var excitement = 0.0
 var dragging_joint = false
@@ -48,83 +47,51 @@ var drag_offset = Vector2.ZERO
 var part_nodes = []
 var current_style = "cute"
 
-# Save Data Variables
-var total_clicks: int = 0
-var current_points: int = 0
-var unlocked_cosmetics: Array = ["default"]
-var equipped_cosmetics: Dictionary = {
-	"hat": "",
-	"glasses": "",
-	"bowtie": "",
-	"left_prop": "",
-	"right_prop": ""
-}
+var left_paw_tween: Tween = null
+var right_paw_tween: Tween = null
+var head_tween: Tween = null
+var body_tween: Tween = null
+var chest_shake_tween: Tween = null
 
-# Procedural sound buffers
-var click_sound: AudioStreamWAV = null
-var tap_sound: AudioStreamWAV = null
-
-const SAVE_PATH = "user://pata_dog_save.json"
-
-# Global Hook variables
-var udp_server: PacketPeerUDP = PacketPeerUDP.new()
-var hook_pid: int = -1
-
-# Cosmetics database
-var cosmetics_db = {
-	"hat_red": {"name": "红帽子", "slot": "hat"},
-	"hat_crown": {"name": "金皇冠", "slot": "hat"},
-	"glasses_cool": {"name": "太阳镜", "slot": "glasses"},
-	"accessory_bowtie": {"name": "小领结", "slot": "bowtie"},
-	"prop_mic": {"name": "麦克风", "slot": "left_prop"}
-}
-
-
+var cosmetics_manager = null
 
 func _ready():
-	_bake_procedural_sounds()
-	load_data()
-	_reset_paws()
-	_update_equipped_slots()
 	get_viewport().transparent_bg = true
-
-	# Start global keyboard hook UDP server
-	var err = udp_server.bind(4000, "127.0.0.1")
-	if err == OK:
-		print("UDP server listening on port 4000")
-		var hook_path = ProjectSettings.globalize_path("res://global_hook.ps1")
-		var args = [
-			"-ExecutionPolicy", "Bypass",
-			"-File", hook_path,
-			"-HostIP", "127.0.0.1",
-			"-Port", "4000",
-			"-ParentPid", str(OS.get_process_id())
-		]
-		hook_pid = OS.create_process("powershell.exe", args)
-		if hook_pid != -1:
-			print("Started global_hook.ps1 with PID: ", hook_pid)
-		else:
-			print("Failed to start global_hook.ps1")
-	else:
-		print("Failed to bind UDP server on port 4000: ", err)
-
 	
-	part_nodes = [
-		head,
-		body,
-		left_paw_up,
-		left_paw_down,
-		right_paw_up,
-		right_paw_down,
-		tail
-	]
+	# Instantiate cosmetics manager locally
+	cosmetics_manager = preload("res://cosmetics_manager.gd").new()
+	add_child(cosmetics_manager)
 	
-	# Populate Style option
+	var slots = {
+		"hat": hat_slot,
+		"glasses": glasses_slot,
+		"bowtie": bowtie_slot,
+		"left_prop": left_prop_slot,
+		"right_prop": right_prop_slot
+	}
+	if has_node("Mascot/BodyJoint/NecklaceSlot"):
+		slots["necklace"] = $Mascot/BodyJoint/NecklaceSlot
+	
+	cosmetics_manager.setup_slots(slots)
+	cosmetics_manager.slots_updated.connect(_populate_wardrobe_ui)
+	
+	# Connect global hook signal
+	GlobalHookManager.global_key_pressed.connect(_on_global_key_pressed)
+	
+	# Connect SaveManager signals
+	SaveManager.points_changed.connect(_on_points_changed)
+	SaveManager.data_loaded.connect(_on_data_loaded)
+	
+	# Initialize paw state
+	_reset_paws()
+	
+	# Setup Paint Editor nodes
+	part_nodes = [head, body, left_paw_up, left_paw_down, right_paw_up, right_paw_down, tail]
+	
 	style_option.add_item("可爱风格 (Cute)")
 	style_option.add_item("鬼畜风格 (Bizarre)")
 	style_option.item_selected.connect(_on_style_selected)
 	
-	# Populate Part option
 	part_option.add_item("头部 (Head)")
 	part_option.add_item("身体 (Body)")
 	part_option.add_item("左爪-起 (Left Paw Up)")
@@ -134,7 +101,6 @@ func _ready():
 	part_option.add_item("尾巴 (Tail)")
 	part_option.item_selected.connect(_on_part_selected)
 	
-	# Connect UI controls
 	toggle_editor_btn.pressed.connect(_on_toggle_editor_btn_pressed)
 	brush_color_btn.color_changed.connect(_on_brush_color_changed)
 	brush_size_slider.value_changed.connect(_on_brush_size_changed)
@@ -146,33 +112,18 @@ func _ready():
 	get_window().files_dropped.connect(_on_files_dropped)
 	joint_handle.gui_input.connect(_on_joint_handle_gui_input)
 	
-	# Initialize brush
 	canvas.set_brush_color(brush_color_btn.color)
 	canvas.set_brush_size(brush_size_slider.value)
 	
-	# Connect chest button pressed signal
 	chest_button.pressed.connect(_on_chest_button_pressed)
 	
-	# Load head default (empty) to canvas
 	_on_part_selected(0)
 	
-	# Render chest states and wardrobe list
-	_on_points_incremented()
-	_populate_wardrobe_ui()
-
-
+	# Load initial data state
+	if SaveManager.total_clicks > 0 or SaveManager.current_points > 0:
+		_on_data_loaded()
 
 func _process(delta):
-	# Poll UDP packets from global keyboard hook
-	if udp_server.is_bound():
-		while udp_server.get_available_packet_count() > 0:
-			var packet = udp_server.get_packet()
-			# If the window is focused, we already receive inputs via local input handlers,
-			# so ignore global hook packets to prevent double-triggering.
-			if not get_window().has_focus():
-				if packet.size() > 0:
-					_trigger_alternate_wave(true)
-
 	excitement = max(0.0, excitement - delta * 2.0)
 	var time = Time.get_ticks_msec() / 1000.0
 	
@@ -180,7 +131,6 @@ func _process(delta):
 		var speed = 5.0 + excitement * 15.0
 		tail_joint.rotation = -0.5 + sin(time * speed) * (0.2 + excitement * 0.5)
 		
-		# Smooth breathing/sway
 		body_joint.rotation = lerp_angle(body_joint.rotation, 0.0, delta * 15.0)
 		body_joint.position.y = lerp(body_joint.position.y, 350.0 + sin(time * 3.0) * 4.0, delta * 10.0)
 		body_joint.position.x = lerp(body_joint.position.x, 400.0, delta * 10.0)
@@ -190,20 +140,17 @@ func _process(delta):
 		
 		tail.scale = lerp(tail.scale, Vector2.ONE, delta * 10.0)
 		
-	else: # bizarre (鬼畜) style
+	else: # bizarre style
 		var speed = 25.0 + excitement * 50.0
 		tail_joint.rotation = -0.5 + sin(time * speed) * (0.8 + excitement * 1.5) + randf_range(-0.1, 0.1)
 		tail.scale = Vector2(1.0, 1.0) + Vector2(randf_range(-0.3, 0.3), randf_range(-0.3, 0.3))
 		
-		# Jittery body
 		body_joint.rotation = lerp_angle(body_joint.rotation, randf_range(-0.2, 0.2), delta * 40.0)
 		body_joint.position = Vector2(400, 350) + Vector2(randf_range(-8, 8), randf_range(-8, 8))
 		
-		# Twitching head
 		head_joint.rotation = lerp_angle(head_joint.rotation, sin(time * 60.0) * 0.2 + randf_range(-0.1, 0.1), delta * 40.0)
 		head_joint.position = Vector2(0, -100) + Vector2(randf_range(-15, 15), randf_range(-15, 15))
 
-	# Update Joint Handle position if editor is open
 	if editor_panel.visible:
 		joint_handle.visible = true
 		var active_joint = _get_current_joint()
@@ -212,13 +159,9 @@ func _process(delta):
 	else:
 		joint_handle.visible = false
 
-var left_paw_tween: Tween = null
-var right_paw_tween: Tween = null
-var head_tween: Tween = null
-var body_tween: Tween = null
+# ─── Input Handling ───────────────────────────────────────────
 
 func _input(event):
-	# 窗口拖拽 (中键)
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_MIDDLE:
 		if event.pressed:
 			dragging_window = true
@@ -230,39 +173,34 @@ func _input(event):
 		DisplayServer.window_set_position(DisplayServer.window_get_position() + Vector2i(event.position - drag_offset))
 		return
 		
-	# 如果正在拖动骨骼点，不触发交互动画
 	if dragging_joint:
 		return
 		
-	# 键盘检测
 	if event is InputEventKey:
 		if event.pressed and not event.echo:
 			if event.keycode == KEY_SPACE or event.keycode == KEY_ENTER:
 				_bark()
-				_paw_down("both")
 			else:
 				_trigger_alternate_wave(true)
 	
-	# 鼠标检测
 	elif event is InputEventMouseButton and not dragging_window:
 		if event.pressed:
-			# 过滤编辑器区域的点击
 			if editor_panel.visible and event.position.x < 380:
 				return
-			
 			if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT:
 				_trigger_alternate_wave(false)
 
+func _on_global_key_pressed():
+	if not get_window().has_focus():
+		_trigger_alternate_wave(true)
 
 func _trigger_alternate_wave(is_keyboard: bool = true):
-	total_clicks += 1
-	current_points += 1
-	_on_points_incremented()
+	SaveManager.increment_click()
 	
 	if is_keyboard:
-		_play_sound(click_sound)
+		SoundManager.play_click(excitement)
 	else:
-		_play_sound(tap_sound)
+		SoundManager.play_tap(excitement)
 		
 	if use_left_paw:
 		_paw_down("left")
@@ -270,10 +208,18 @@ func _trigger_alternate_wave(is_keyboard: bool = true):
 		_paw_down("right")
 	use_left_paw = !use_left_paw
 
+func _bark():
+	SaveManager.increment_click()
+	SoundManager.play_bark(excitement)
+	_paw_down("both")
+
+func _add_excitement():
+	excitement = min(1.0, excitement + 0.15)
+
+# ─── Animations ───────────────────────────────────────────────
+
 func _paw_down(side):
 	_add_excitement()
-
-	
 	if current_style == "cute":
 		_paw_down_cute(side)
 	else:
@@ -284,8 +230,7 @@ func _paw_down_cute(side):
 		left_paw_up.visible = false
 		left_paw_down.visible = true
 		
-		if left_paw_tween:
-			left_paw_tween.kill()
+		if left_paw_tween: left_paw_tween.kill()
 		left_paw_tween = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		left_paw_tween.tween_property(left_paw_joint, "rotation", 0.4, 0.08)
 		left_paw_tween.tween_property(left_paw_joint, "rotation", 0.0, 0.12).set_delay(0.05)
@@ -294,9 +239,7 @@ func _paw_down_cute(side):
 			left_paw_down.visible = false
 		)
 		
-		# Gentle head shake opposite side
-		if head_tween:
-			head_tween.kill()
+		if head_tween: head_tween.kill()
 		head_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		head_tween.tween_property(head_joint, "rotation", -0.15, 0.08)
 		head_tween.tween_property(head_joint, "rotation", 0.0, 0.12)
@@ -305,8 +248,7 @@ func _paw_down_cute(side):
 		right_paw_up.visible = false
 		right_paw_down.visible = true
 		
-		if right_paw_tween:
-			right_paw_tween.kill()
+		if right_paw_tween: right_paw_tween.kill()
 		right_paw_tween = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		right_paw_tween.tween_property(right_paw_joint, "rotation", -0.4, 0.08)
 		right_paw_tween.tween_property(right_paw_joint, "rotation", 0.0, 0.12).set_delay(0.05)
@@ -315,16 +257,12 @@ func _paw_down_cute(side):
 			right_paw_down.visible = false
 		)
 		
-		# Gentle head shake opposite side
-		if head_tween:
-			head_tween.kill()
+		if head_tween: head_tween.kill()
 		head_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		head_tween.tween_property(head_joint, "rotation", 0.15, 0.08)
 		head_tween.tween_property(head_joint, "rotation", 0.0, 0.12)
 
-	# Body recoil
-	if body_tween:
-		body_tween.kill()
+	if body_tween: body_tween.kill()
 	body_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	body_tween.tween_property(body_joint, "position:y", 355.0, 0.05)
 	body_tween.tween_property(body_joint, "position:y", 350.0, 0.1)
@@ -334,8 +272,7 @@ func _paw_down_bizarre(side):
 		left_paw_up.visible = false
 		left_paw_down.visible = true
 		
-		if left_paw_tween:
-			left_paw_tween.kill()
+		if left_paw_tween: left_paw_tween.kill()
 		left_paw_tween = create_tween().set_parallel(true)
 		left_paw_tween.tween_property(left_paw_joint, "rotation", 1.8, 0.05)
 		left_paw_tween.tween_property(left_paw_joint, "scale", Vector2(2.5, 0.4), 0.05)
@@ -352,8 +289,7 @@ func _paw_down_bizarre(side):
 		right_paw_up.visible = false
 		right_paw_down.visible = true
 		
-		if right_paw_tween:
-			right_paw_tween.kill()
+		if right_paw_tween: right_paw_tween.kill()
 		right_paw_tween = create_tween().set_parallel(true)
 		right_paw_tween.tween_property(right_paw_joint, "rotation", -1.8, 0.05)
 		right_paw_tween.tween_property(right_paw_joint, "scale", Vector2(2.5, 0.4), 0.05)
@@ -366,14 +302,11 @@ func _paw_down_bizarre(side):
 			right_paw_down.visible = false
 		)
 
-	# Violent head spin
-	if head_tween:
-		head_tween.kill()
+	if head_tween: head_tween.kill()
 	head_tween = create_tween().set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 	head_tween.tween_property(head_joint, "rotation", randf_range(-PI * 1.5, PI * 1.5), 0.05)
 	head_tween.tween_property(head_joint, "rotation", 0.0, 0.1)
 	
-	# Violent body bounce
 	body_joint.position = Vector2(400, 350) + Vector2(randf_range(-25, 25), randf_range(-25, 25))
 	body_joint.rotation = randf_range(-0.4, 0.4)
 
@@ -391,10 +324,108 @@ func _reset_paws():
 	right_paw_joint.rotation = 0.0
 	right_paw_joint.scale = Vector2.ONE
 
-func _add_excitement():
-	excitement = min(1.0, excitement + 0.15)
+# ─── UI & Events ──────────────────────────────────────────────
 
-# Editor Event Handlers
+func _on_data_loaded():
+	cosmetics_manager.update_slot_textures()
+	_on_points_changed(SaveManager.total_clicks, SaveManager.current_points)
+	_populate_wardrobe_ui()
+
+func _on_points_changed(total: int, current: int):
+	progress_label.text = "打字数: %d | 宝箱进度: %d/%d" % [total, current % cosmetics_manager.CHEST_COST, cosmetics_manager.CHEST_COST]
+	
+	if current >= cosmetics_manager.CHEST_COST and cosmetics_manager.has_locked_items():
+		chest_button.visible = true
+		_start_chest_shake()
+	else:
+		chest_button.visible = false
+		if chest_shake_tween:
+			chest_shake_tween.kill()
+		chest_button.rotation = 0.0
+
+func _start_chest_shake():
+	if chest_shake_tween and chest_shake_tween.is_valid():
+		return
+	chest_shake_tween = create_tween().set_loops()
+	chest_shake_tween.tween_property(chest_button, "rotation", 0.08, 0.05)
+	chest_shake_tween.tween_property(chest_button, "rotation", -0.08, 0.1).set_delay(0.05)
+	chest_shake_tween.tween_property(chest_button, "rotation", 0.0, 0.05).set_delay(0.15)
+	chest_shake_tween.tween_interval(1.5)
+
+func _on_chest_button_pressed():
+	if SaveManager.current_points < cosmetics_manager.CHEST_COST: return
+	
+	var item_unlocked = cosmetics_manager.try_open_chest()
+	if item_unlocked != "":
+		SaveManager.spend_points(cosmetics_manager.CHEST_COST)
+		var item_name = cosmetics_manager.get_db()[item_unlocked]["name"]
+		_show_unlock_popup(item_name)
+	else:
+		_show_unlock_popup("所有饰品已解锁！点数已转换为积分。")
+		
+	chest_particles.restart()
+	chest_particles.emitting = true
+	SoundManager.play_tap(0.5)
+	SoundManager.play_click(0.5)
+	
+	_populate_wardrobe_ui()
+
+func _show_unlock_popup(text_msg: String):
+	var popup_label = Label.new()
+	popup_label.text = "🎉 " + text_msg
+	popup_label.add_theme_font_size_override("font_size", 20)
+	popup_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	popup_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	popup_label.size = Vector2(400, 50)
+	popup_label.position = Vector2(200, 275)
+	popup_label.pivot_offset = Vector2(200, 25)
+	popup_label.scale = Vector2.ZERO
+	$UI.add_child(popup_label)
+	
+	var t = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(popup_label, "scale", Vector2.ONE, 0.3)
+	t.tween_property(popup_label, "position:y", 220.0, 0.8).set_delay(0.2)
+	t.parallel().tween_property(popup_label, "modulate:a", 0.0, 0.8).set_delay(0.2)
+	t.finished.connect(func():
+		popup_label.queue_free()
+	)
+
+func _populate_wardrobe_ui():
+	for child in wardrobe_grid.get_children():
+		child.queue_free()
+		
+	var unequip_btn = Button.new()
+	unequip_btn.text = "❌ 脱下全部"
+	unequip_btn.pressed.connect(func():
+		cosmetics_manager.unequip_all()
+	)
+	wardrobe_grid.add_child(unequip_btn)
+	
+	var db = cosmetics_manager.get_db()
+	for item_id in db.keys():
+		var btn = Button.new()
+		var item_data = db[item_id]
+		var is_unlocked = SaveManager.unlocked_cosmetics.has(item_id)
+		
+		if is_unlocked:
+			var is_equipped = cosmetics_manager.is_equipped(item_id)
+			if is_equipped:
+				btn.text = "👑 " + item_data["name"]
+				btn.modulate = Color.GREEN
+			else:
+				btn.text = item_data.get("icon", "") + " " + item_data["name"]
+				
+			btn.pressed.connect(func():
+				cosmetics_manager.toggle_equip(item_id)
+			)
+		else:
+			btn.text = "🔒 未解锁"
+			btn.disabled = true
+			
+		wardrobe_grid.add_child(btn)
+
+# ─── Editor Canvas Handlers ───────────────────────────────────
+
 func _on_toggle_editor_btn_pressed():
 	editor_panel.visible = !editor_panel.visible
 	if editor_panel.visible:
@@ -457,276 +488,6 @@ func _load_image_to_part(path: String):
 		canvas.image = img_for_canvas
 		canvas._update_texture()
 
-func _tap_sound():
-	pass
-
-func _bark():
-	_play_sound(click_sound)
-
-# Procedural Sound Synthesizer
-func _bake_procedural_sounds():
-	var mix_rate = 22050
-	
-	# 1. Keyboard Click (Clack)
-	var duration_click = 0.05
-	var samples_click = int(mix_rate * duration_click)
-	var bytes_click = PackedByteArray()
-	bytes_click.resize(samples_click * 2)
-	for i in range(samples_click):
-		var t = float(i) / mix_rate
-		var val = (randf_range(-0.4, 0.4) + sin(2.0 * PI * 1800.0 * t) * 0.4) * exp(-t * 120.0)
-		var val_16 = int(clamp(val * 32767.0, -32768.0, 32767.0))
-		bytes_click.encode_s16(i * 2, val_16)
-	
-	click_sound = AudioStreamWAV.new()
-	click_sound.format = AudioStreamWAV.FORMAT_16_BITS
-	click_sound.mix_rate = mix_rate
-	click_sound.stereo = false
-	click_sound.data = bytes_click
-
-	# 2. Drum Tap (Thump)
-	var duration_tap = 0.15
-	var samples_tap = int(mix_rate * duration_tap)
-	var bytes_tap = PackedByteArray()
-	bytes_tap.resize(samples_tap * 2)
-	for i in range(samples_tap):
-		var t = float(i) / mix_rate
-		var val = sin(2.0 * PI * 135.0 * t) * exp(-t * 22.0)
-		var val_16 = int(clamp(val * 32767.0, -32768.0, 32767.0))
-		bytes_tap.encode_s16(i * 2, val_16)
-		
-	tap_sound = AudioStreamWAV.new()
-	tap_sound.format = AudioStreamWAV.FORMAT_16_BITS
-	tap_sound.mix_rate = mix_rate
-	tap_sound.stereo = false
-	tap_sound.data = bytes_tap
-
-# Dynamically play synthesized sound
-func _play_sound(stream_val: AudioStream):
-	if not stream_val: return
-	var player = AudioStreamPlayer.new()
-	add_child(player)
-	player.stream = stream_val
-	player.pitch_scale = randf_range(0.95, 1.05) + excitement * 0.25
-	player.play()
-	player.finished.connect(func():
-		player.queue_free()
-	)
-
-# Update equipped slot textures
-func _update_equipped_slots():
-	# Map equipped cosmetics keys to slot nodes
-	_load_cosmetic_into_slot(equipped_cosmetics.get("hat", ""), hat_slot)
-	_load_cosmetic_into_slot(equipped_cosmetics.get("glasses", ""), glasses_slot)
-	_load_cosmetic_into_slot(equipped_cosmetics.get("bowtie", ""), bowtie_slot)
-	_load_cosmetic_into_slot(equipped_cosmetics.get("left_prop", ""), left_prop_slot)
-	_load_cosmetic_into_slot(equipped_cosmetics.get("right_prop", ""), right_prop_slot)
-
-func _load_cosmetic_into_slot(item_name: String, slot_node: Sprite2D):
-	if not slot_node: return
-	if item_name == "":
-		slot_node.texture = null
-		return
-	var file_path = "res://assets/cosmetics/" + item_name + ".png"
-	if FileAccess.file_exists(file_path):
-		var tex = load(file_path)
-		slot_node.texture = tex
-	else:
-		slot_node.texture = null
-
-# Point increment listener
-func _on_points_incremented():
-	progress_label.text = "打字数: %d | 宝箱进度: %d/1000" % [total_clicks, current_points % 1000]
-	
-	if current_points >= 1000:
-		chest_button.visible = true
-		_start_chest_shake()
-	else:
-		chest_button.visible = false
-		if chest_shake_tween:
-			chest_shake_tween.kill()
-		chest_button.rotation = 0.0
-		
-	if total_clicks % 50 == 0:
-		save_data()
-
-var chest_shake_tween: Tween = null
-func _start_chest_shake():
-	if chest_shake_tween:
-		return # Already shaking
-	chest_shake_tween = create_tween().set_loops()
-	chest_shake_tween.tween_property(chest_button, "rotation", 0.08, 0.05)
-	chest_shake_tween.tween_property(chest_button, "rotation", -0.08, 0.1).set_delay(0.05)
-	chest_shake_tween.tween_property(chest_button, "rotation", 0.0, 0.05).set_delay(0.15)
-	chest_shake_tween.tween_interval(1.5)
-
-func _on_chest_button_pressed():
-	if current_points < 1000: return
-	current_points -= 1000
-	chest_button.visible = false
-	if chest_shake_tween:
-		chest_shake_tween.kill()
-		chest_shake_tween = null
-	chest_button.rotation = 0.0
-	
-	# Blast particles
-	chest_particles.restart()
-	chest_particles.emitting = true
-	_play_sound(tap_sound)
-	_play_sound(click_sound)
-	
-	# Unlock item gacha
-	var locked_items = []
-	for item_id in cosmetics_db.keys():
-		if not unlocked_cosmetics.has(item_id):
-			locked_items.append(item_id)
-			
-	if locked_items.size() > 0:
-		var unlocked_id = locked_items[randi() % locked_items.size()]
-		unlocked_cosmetics.append(unlocked_id)
-		_show_unlock_popup(cosmetics_db[unlocked_id]["name"])
-	else:
-		_show_unlock_popup("所有饰品已解锁！点数+500")
-		current_points += 500
-		
-	_on_points_incremented()
-	_populate_wardrobe_ui()
-	save_data()
-
-func _show_unlock_popup(text_msg: String):
-	var popup_label = Label.new()
-	popup_label.text = "🎉 解锁了: " + text_msg
-	popup_label.add_theme_font_size_override("font_size", 20)
-	popup_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	popup_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	popup_label.size = Vector2(400, 50)
-	popup_label.position = Vector2(200, 275)
-	popup_label.pivot_offset = Vector2(200, 25)
-	popup_label.scale = Vector2.ZERO
-	$UI.add_child(popup_label)
-	
-	var t = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	t.tween_property(popup_label, "scale", Vector2.ONE, 0.3)
-	t.tween_property(popup_label, "position:y", 220.0, 0.8).set_delay(0.2)
-	t.parallel().tween_property(popup_label, "modulate:a", 0.0, 0.8).set_delay(0.2)
-	t.finished.connect(func():
-		popup_label.queue_free()
-	)
-
-func _populate_wardrobe_ui():
-	# Clear previous items
-	for child in wardrobe_grid.get_children():
-		child.queue_free()
-		
-	# Unequip option
-	var unequip_btn = Button.new()
-	unequip_btn.text = "❌ 脱下全部"
-	unequip_btn.pressed.connect(func():
-		equipped_cosmetics["hat"] = ""
-		equipped_cosmetics["glasses"] = ""
-		equipped_cosmetics["bowtie"] = ""
-		equipped_cosmetics["left_prop"] = ""
-		equipped_cosmetics["right_prop"] = ""
-		_update_equipped_slots()
-		_populate_wardrobe_ui()
-		save_data()
-	)
-	wardrobe_grid.add_child(unequip_btn)
-	
-	# Add cosmetics
-	for item_id in cosmetics_db.keys():
-		var btn = Button.new()
-		var item_data = cosmetics_db[item_id]
-		var is_unlocked = unlocked_cosmetics.has(item_id)
-		
-		if is_unlocked:
-			var slot_key = item_data["slot"]
-			var is_equipped = equipped_cosmetics[slot_key] == item_id or (slot_key == "left_prop" and equipped_cosmetics["right_prop"] == item_id)
-			
-			if is_equipped:
-				btn.text = "👑 " + item_data["name"]
-				btn.modulate = Color.GREEN
-			else:
-				btn.text = item_data["name"]
-				
-			btn.pressed.connect(func():
-				_toggle_equip_item(item_id)
-			)
-		else:
-			btn.text = "🔒 未解锁"
-			btn.disabled = true
-			
-		wardrobe_grid.add_child(btn)
-
-func _toggle_equip_item(item_id: String):
-	var item_data = cosmetics_db[item_id]
-	var slot_key = item_data["slot"]
-	
-	if slot_key == "left_prop":
-		if equipped_cosmetics["left_prop"] == item_id:
-			equipped_cosmetics["left_prop"] = ""
-			equipped_cosmetics["right_prop"] = item_id
-		elif equipped_cosmetics["right_prop"] == item_id:
-			equipped_cosmetics["right_prop"] = ""
-		else:
-			equipped_cosmetics["left_prop"] = item_id
-	else:
-		if equipped_cosmetics[slot_key] == item_id:
-			equipped_cosmetics[slot_key] = ""
-		else:
-			equipped_cosmetics[slot_key] = item_id
-			
-	_update_equipped_slots()
-	_populate_wardrobe_ui()
-	save_data()
-
-
-# Save/Load System
-func save_data():
-	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if file:
-		var data = {
-			"total_clicks": total_clicks,
-			"current_points": current_points,
-			"unlocked_cosmetics": unlocked_cosmetics,
-			"equipped_cosmetics": equipped_cosmetics
-		}
-		var json_string = JSON.stringify(data)
-		file.store_string(json_string)
-		file.close()
-
-func load_data():
-	if not FileAccess.file_exists(SAVE_PATH):
-		save_data()
-		return
-		
-	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if file:
-		var json_string = file.get_as_text()
-		file.close()
-		var json = JSON.new()
-		var error = json.parse(json_string)
-		if error == OK:
-			var data = json.data
-			if data is Dictionary:
-				total_clicks = data.get("total_clicks", 0)
-				current_points = data.get("current_points", 0)
-				unlocked_cosmetics = data.get("unlocked_cosmetics", ["default"])
-				var equipped = data.get("equipped_cosmetics", {})
-				for slot in equipped_cosmetics.keys():
-					if equipped.has(slot):
-						equipped_cosmetics[slot] = equipped[slot]
-
-func _notification(what):
-	if what == NOTIFICATION_WM_CLOSE_REQUEST:
-		save_data()
-		if hook_pid != -1:
-			OS.kill(hook_pid)
-			hook_pid = -1
-		get_tree().quit()
-
-
-# Helper to retrieve active joint node
 func _get_current_joint() -> Node2D:
 	var idx = part_option.selected
 	match idx:
@@ -737,7 +498,6 @@ func _get_current_joint() -> Node2D:
 		6: return tail_joint
 	return null
 
-# Handle dragging of joint handle
 func _on_joint_handle_gui_input(event):
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
@@ -749,5 +509,3 @@ func _on_joint_handle_gui_input(event):
 		var active_joint = _get_current_joint()
 		if active_joint:
 			active_joint.global_position = get_global_mouse_position()
-
-
