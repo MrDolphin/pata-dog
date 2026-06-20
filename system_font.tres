@@ -1,0 +1,5 @@
+[gd_resource type="SystemFont" format=3 uid="uid://b0font0system00"]
+
+[resource]
+font_names = PackedStringArray("Microsoft YaHei", "SimHei", "PingFang SC", "sans-serif")
+subpixel_positioning = 0

@@ -39,3 +39,7 @@ window/per_pixel_transparency/allowed=true
 
 environment/defaults/default_clear_color=Color(0, 0, 0, 0)
 viewport/transparent_background=true
+
+[gui]
+
+theme/custom_font="res://system_font.tres"
