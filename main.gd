@@ -19,19 +19,24 @@ extends Node2D
 @onready var left_prop_slot = $Mascot/LeftPawJoint/PropSlot
 @onready var right_prop_slot = $Mascot/RightPawJoint/PropSlot
 
-
 @onready var toggle_editor_btn = $UI/ToggleEditorBtn
 @onready var editor_panel = $UI/EditorPanel
 @onready var style_option = $UI/EditorPanel/VBoxContainer/StyleHBox/StyleOption
-@onready var part_option = $UI/EditorPanel/VBoxContainer/PartHBox/PartOption
-@onready var canvas = $UI/EditorPanel/VBoxContainer/CanvasContainer/Canvas
-@onready var brush_color_btn = $UI/EditorPanel/VBoxContainer/BrushControl/BrushColor
-@onready var brush_size_slider = $UI/EditorPanel/VBoxContainer/BrushControl/BrushSize
-@onready var clear_btn = $UI/EditorPanel/VBoxContainer/ActionButtons/ClearBtn
-@onready var save_btn = $UI/EditorPanel/VBoxContainer/ActionButtons/SaveBtn
-@onready var import_btn = $UI/EditorPanel/VBoxContainer/ImportButtons/ImportBtn
+@onready var part_option = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PartHBox/PartOption
+@onready var canvas = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/CanvasContainer/Canvas
+@onready var brush_color_btn = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/BrushControl/BrushColor
+@onready var brush_size_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/BrushControl/BrushSize
+@onready var clear_btn = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/ActionButtons/ClearBtn
+@onready var save_btn = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/ActionButtons/SaveBtn
+@onready var import_btn = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/ImportButtons/ImportBtn
 @onready var file_dialog = $UI/FileDialog
 @onready var joint_handle = $UI/JointHandle
+
+@onready var progress_label = $UI/ProgressLabel
+@onready var chest_button = $UI/ChestButton
+@onready var chest_particles = $ChestParticles
+@onready var wardrobe_grid = $UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox/WardrobeGrid
+
 
 var use_left_paw = true
 var excitement = 0.0
@@ -56,10 +61,24 @@ var equipped_cosmetics: Dictionary = {
 }
 
 # Procedural sound buffers
-var click_sound: AudioStreamWav = null
-var tap_sound: AudioStreamWav = null
+var click_sound: AudioStreamWAV = null
+var tap_sound: AudioStreamWAV = null
 
 const SAVE_PATH = "user://pata_dog_save.json"
+
+# Global Hook variables
+var udp_server: PacketPeerUDP = PacketPeerUDP.new()
+var hook_pid: int = -1
+
+# Cosmetics database
+var cosmetics_db = {
+	"hat_red": {"name": "红帽子", "slot": "hat"},
+	"hat_crown": {"name": "金皇冠", "slot": "hat"},
+	"glasses_cool": {"name": "太阳镜", "slot": "glasses"},
+	"accessory_bowtie": {"name": "小领结", "slot": "bowtie"},
+	"prop_mic": {"name": "麦克风", "slot": "left_prop"}
+}
+
 
 
 func _ready():
@@ -68,6 +87,26 @@ func _ready():
 	_reset_paws()
 	_update_equipped_slots()
 	get_viewport().transparent_bg = true
+
+	# Start global keyboard hook UDP server
+	var err = udp_server.bind(4000, "127.0.0.1")
+	if err == OK:
+		print("UDP server listening on port 4000")
+		var hook_path = ProjectSettings.globalize_path("res://global_hook.ps1")
+		var args = [
+			"-ExecutionPolicy", "Bypass",
+			"-File", hook_path,
+			"-HostIP", "127.0.0.1",
+			"-Port", "4000",
+			"-ParentPid", str(OS.get_process_id())
+		]
+		hook_pid = OS.create_process("powershell.exe", args)
+		if hook_pid != -1:
+			print("Started global_hook.ps1 with PID: ", hook_pid)
+		else:
+			print("Failed to start global_hook.ps1")
+	else:
+		print("Failed to bind UDP server on port 4000: ", err)
 
 	
 	part_nodes = [
@@ -111,11 +150,29 @@ func _ready():
 	canvas.set_brush_color(brush_color_btn.color)
 	canvas.set_brush_size(brush_size_slider.value)
 	
+	# Connect chest button pressed signal
+	chest_button.pressed.connect(_on_chest_button_pressed)
+	
 	# Load head default (empty) to canvas
 	_on_part_selected(0)
+	
+	# Render chest states and wardrobe list
+	_on_points_incremented()
+	_populate_wardrobe_ui()
+
 
 
 func _process(delta):
+	# Poll UDP packets from global keyboard hook
+	if udp_server.is_bound():
+		while udp_server.get_available_packet_count() > 0:
+			var packet = udp_server.get_packet()
+			# If the window is focused, we already receive inputs via local input handlers,
+			# so ignore global hook packets to prevent double-triggering.
+			if not get_window().has_focus():
+				if packet.size() > 0:
+					_trigger_alternate_wave(true)
+
 	excitement = max(0.0, excitement - delta * 2.0)
 	var time = Time.get_ticks_msec() / 1000.0
 	
@@ -421,8 +478,8 @@ func _bake_procedural_sounds():
 		var val_16 = int(clamp(val * 32767.0, -32768.0, 32767.0))
 		bytes_click.encode_s16(i * 2, val_16)
 	
-	click_sound = AudioStreamWav.new()
-	click_sound.format = AudioStreamWav.FORMAT_16_BITS
+	click_sound = AudioStreamWAV.new()
+	click_sound.format = AudioStreamWAV.FORMAT_16_BITS
 	click_sound.mix_rate = mix_rate
 	click_sound.stereo = false
 	click_sound.data = bytes_click
@@ -438,8 +495,8 @@ func _bake_procedural_sounds():
 		var val_16 = int(clamp(val * 32767.0, -32768.0, 32767.0))
 		bytes_tap.encode_s16(i * 2, val_16)
 		
-	tap_sound = AudioStreamWav.new()
-	tap_sound.format = AudioStreamWav.FORMAT_16_BITS
+	tap_sound = AudioStreamWAV.new()
+	tap_sound.format = AudioStreamWAV.FORMAT_16_BITS
 	tap_sound.mix_rate = mix_rate
 	tap_sound.stereo = false
 	tap_sound.data = bytes_tap
@@ -477,10 +534,152 @@ func _load_cosmetic_into_slot(item_name: String, slot_node: Sprite2D):
 	else:
 		slot_node.texture = null
 
-# Point increment listener (Phase 2 placeholder / Phase 3 hook)
+# Point increment listener
 func _on_points_incremented():
+	progress_label.text = "打字数: %d | 宝箱进度: %d/1000" % [total_clicks, current_points % 1000]
+	
+	if current_points >= 1000:
+		chest_button.visible = true
+		_start_chest_shake()
+	else:
+		chest_button.visible = false
+		if chest_shake_tween:
+			chest_shake_tween.kill()
+		chest_button.rotation = 0.0
+		
 	if total_clicks % 50 == 0:
 		save_data()
+
+var chest_shake_tween: Tween = null
+func _start_chest_shake():
+	if chest_shake_tween:
+		return # Already shaking
+	chest_shake_tween = create_tween().set_loops()
+	chest_shake_tween.tween_property(chest_button, "rotation", 0.08, 0.05)
+	chest_shake_tween.tween_property(chest_button, "rotation", -0.08, 0.1).set_delay(0.05)
+	chest_shake_tween.tween_property(chest_button, "rotation", 0.0, 0.05).set_delay(0.15)
+	chest_shake_tween.tween_interval(1.5)
+
+func _on_chest_button_pressed():
+	if current_points < 1000: return
+	current_points -= 1000
+	chest_button.visible = false
+	if chest_shake_tween:
+		chest_shake_tween.kill()
+		chest_shake_tween = null
+	chest_button.rotation = 0.0
+	
+	# Blast particles
+	chest_particles.restart()
+	chest_particles.emitting = true
+	_play_sound(tap_sound)
+	_play_sound(click_sound)
+	
+	# Unlock item gacha
+	var locked_items = []
+	for item_id in cosmetics_db.keys():
+		if not unlocked_cosmetics.has(item_id):
+			locked_items.append(item_id)
+			
+	if locked_items.size() > 0:
+		var unlocked_id = locked_items[randi() % locked_items.size()]
+		unlocked_cosmetics.append(unlocked_id)
+		_show_unlock_popup(cosmetics_db[unlocked_id]["name"])
+	else:
+		_show_unlock_popup("所有饰品已解锁！点数+500")
+		current_points += 500
+		
+	_on_points_incremented()
+	_populate_wardrobe_ui()
+	save_data()
+
+func _show_unlock_popup(text_msg: String):
+	var popup_label = Label.new()
+	popup_label.text = "🎉 解锁了: " + text_msg
+	popup_label.add_theme_font_size_override("font_size", 20)
+	popup_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	popup_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	popup_label.size = Vector2(400, 50)
+	popup_label.position = Vector2(200, 275)
+	popup_label.pivot_offset = Vector2(200, 25)
+	popup_label.scale = Vector2.ZERO
+	$UI.add_child(popup_label)
+	
+	var t = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(popup_label, "scale", Vector2.ONE, 0.3)
+	t.tween_property(popup_label, "position:y", 220.0, 0.8).set_delay(0.2)
+	t.parallel().tween_property(popup_label, "modulate:a", 0.0, 0.8).set_delay(0.2)
+	t.finished.connect(func():
+		popup_label.queue_free()
+	)
+
+func _populate_wardrobe_ui():
+	# Clear previous items
+	for child in wardrobe_grid.get_children():
+		child.queue_free()
+		
+	# Unequip option
+	var unequip_btn = Button.new()
+	unequip_btn.text = "❌ 脱下全部"
+	unequip_btn.pressed.connect(func():
+		equipped_cosmetics["hat"] = ""
+		equipped_cosmetics["glasses"] = ""
+		equipped_cosmetics["bowtie"] = ""
+		equipped_cosmetics["left_prop"] = ""
+		equipped_cosmetics["right_prop"] = ""
+		_update_equipped_slots()
+		_populate_wardrobe_ui()
+		save_data()
+	)
+	wardrobe_grid.add_child(unequip_btn)
+	
+	# Add cosmetics
+	for item_id in cosmetics_db.keys():
+		var btn = Button.new()
+		var item_data = cosmetics_db[item_id]
+		var is_unlocked = unlocked_cosmetics.has(item_id)
+		
+		if is_unlocked:
+			var slot_key = item_data["slot"]
+			var is_equipped = equipped_cosmetics[slot_key] == item_id or (slot_key == "left_prop" and equipped_cosmetics["right_prop"] == item_id)
+			
+			if is_equipped:
+				btn.text = "👑 " + item_data["name"]
+				btn.modulate = Color.GREEN
+			else:
+				btn.text = item_data["name"]
+				
+			btn.pressed.connect(func():
+				_toggle_equip_item(item_id)
+			)
+		else:
+			btn.text = "🔒 未解锁"
+			btn.disabled = true
+			
+		wardrobe_grid.add_child(btn)
+
+func _toggle_equip_item(item_id: String):
+	var item_data = cosmetics_db[item_id]
+	var slot_key = item_data["slot"]
+	
+	if slot_key == "left_prop":
+		if equipped_cosmetics["left_prop"] == item_id:
+			equipped_cosmetics["left_prop"] = ""
+			equipped_cosmetics["right_prop"] = item_id
+		elif equipped_cosmetics["right_prop"] == item_id:
+			equipped_cosmetics["right_prop"] = ""
+		else:
+			equipped_cosmetics["left_prop"] = item_id
+	else:
+		if equipped_cosmetics[slot_key] == item_id:
+			equipped_cosmetics[slot_key] = ""
+		else:
+			equipped_cosmetics[slot_key] = item_id
+			
+	_update_equipped_slots()
+	_populate_wardrobe_ui()
+	save_data()
+
 
 # Save/Load System
 func save_data():
@@ -521,6 +720,9 @@ func load_data():
 func _notification(what):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		save_data()
+		if hook_pid != -1:
+			OS.kill(hook_pid)
+			hook_pid = -1
 		get_tree().quit()
 
 

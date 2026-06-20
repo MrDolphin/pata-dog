@@ -20,7 +20,12 @@ corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
+[sub_resource type="Gradient" id="Gradient_particles"]
+offsets = PackedFloat32Array(0, 0.33, 0.66, 1)
+colors = PackedColorArray(1, 0.1, 0.1, 1, 0.1, 0.9, 0.1, 1, 0.1, 0.5, 1, 1, 1, 0.8, 0.1, 1)
+
 [node name="Main" type="Node2D" unique_id=1982947122]
+
 script = ExtResource("1_abcde")
 
 [node name="Mascot" type="Node2D" parent="." unique_id=747983630]
@@ -96,7 +101,24 @@ flip_h = true
 position = Vector2(438, 466)
 texture = ExtResource("3_desk")
 
+[node name="ChestParticles" type="CPUParticles2D" parent="."]
+position = Vector2(400, 350)
+emitting = false
+amount = 40
+lifetime = 1.2
+one_shot = true
+explosiveness = 1.0
+direction = Vector2(0, -1)
+spread = 90.0
+gravity = Vector2(0, 150)
+initial_velocity_min = 100.0
+initial_velocity_max = 250.0
+scale_amount_min = 6.0
+scale_amount_max = 12.0
+color_ramp = SubResource("Gradient_particles")
+
 [node name="UI" type="CanvasLayer" parent="." unique_id=883840219]
+
 
 [node name="ToggleEditorBtn" type="Button" parent="UI" unique_id=282002418]
 offset_left = 20.0
@@ -142,41 +164,51 @@ text = "风格: "
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="PartHBox" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer" unique_id=933886609]
+[node name="TabContainer" type="TabContainer" parent="UI/EditorPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PaintTab" type="VBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+metadata/_tab_index = 0
+
+[node name="PartHBox" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/PartHBox" unique_id=490320484]
+[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PartHBox"]
 layout_mode = 2
 text = "当前部件: "
 
-[node name="PartOption" type="OptionButton" parent="UI/EditorPanel/VBoxContainer/PartHBox" unique_id=337242417]
+[node name="PartOption" type="OptionButton" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PartHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="CanvasContainer" type="CenterContainer" parent="UI/EditorPanel/VBoxContainer" unique_id=1677332245]
+[node name="CanvasContainer" type="CenterContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab"]
 layout_mode = 2
 
-[node name="Canvas" type="Control" parent="UI/EditorPanel/VBoxContainer/CanvasContainer" unique_id=266027806]
+[node name="Canvas" type="Control" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/CanvasContainer"]
 layout_mode = 2
 script = ExtResource("7_canvas")
 
-[node name="BrushControl" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer" unique_id=1950503376]
+[node name="BrushControl" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ColorLabel" type="Label" parent="UI/EditorPanel/VBoxContainer/BrushControl" unique_id=476158139]
+[node name="ColorLabel" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/BrushControl"]
 layout_mode = 2
 text = "颜色: "
 
-[node name="BrushColor" type="ColorPickerButton" parent="UI/EditorPanel/VBoxContainer/BrushControl" unique_id=1395626853]
+[node name="BrushColor" type="ColorPickerButton" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/BrushControl"]
 layout_mode = 2
 size_flags_horizontal = 3
+color = Color(0, 0, 0, 1)
 
-[node name="SizeLabel" type="Label" parent="UI/EditorPanel/VBoxContainer/BrushControl" unique_id=200775616]
+[node name="SizeLabel" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/BrushControl"]
 layout_mode = 2
 text = "大小: "
 
-[node name="BrushSize" type="HSlider" parent="UI/EditorPanel/VBoxContainer/BrushControl" unique_id=198268910]
+[node name="BrushSize" type="HSlider" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/BrushControl"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -184,35 +216,57 @@ min_value = 2.0
 max_value = 50.0
 value = 12.0
 
-[node name="ActionButtons" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer" unique_id=189101561]
+[node name="ActionButtons" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ClearBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/ActionButtons" unique_id=1075913529]
+[node name="ClearBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/ActionButtons"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "清除画布"
 
-[node name="SaveBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/ActionButtons" unique_id=305588527]
+[node name="SaveBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/ActionButtons"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "应用画板"
 
-[node name="ImportButtons" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer" unique_id=1044037042]
+[node name="ImportButtons" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ImportBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/ImportButtons" unique_id=96845474]
+[node name="ImportBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/ImportButtons"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "导入图片"
 
-[node name="DropLabel" type="Label" parent="UI/EditorPanel/VBoxContainer" unique_id=96005197]
+[node name="DropLabel" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
 theme_override_font_sizes/font_size = 11
-text = "拖拽本地图片到窗口可直接导入为当前部件"
+text = "拖拽本地图片可直接导入"
 horizontal_alignment = 1
+
+[node name="WardrobeTab" type="ScrollContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="VBox" type="VBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox"]
+layout_mode = 2
+text = "选择要佩戴的饰品:"
+
+[node name="WardrobeGrid" type="GridContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
 
 [node name="FileDialog" type="FileDialog" parent="UI" unique_id=1293649619]
 title = "Open a File"
@@ -228,5 +282,30 @@ custom_minimum_size = Vector2(20, 20)
 offset_right = 20.0
 offset_bottom = 20.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_handle")
+
+[node name="ProgressLabel" type="Label" parent="UI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -260.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 50.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 13
+text = "打字数: 0 | 宝箱进度: 0/1000"
+horizontal_alignment = 2
+
+[node name="ChestButton" type="Button" parent="UI"]
+visible = false
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -160.0
+offset_top = 55.0
+offset_right = -20.0
+offset_bottom = 105.0
+grow_horizontal = 0
+text = "🎁 点击开箱!"
 
 [node name="AudioStreamPlayers" type="Node" parent="." unique_id=537824719]
