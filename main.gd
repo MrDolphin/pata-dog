@@ -523,10 +523,10 @@ func _populate_wardrobe_ui():
 func _on_toggle_editor_btn_pressed():
 	editor_panel.visible = !editor_panel.visible
 	if editor_panel.visible:
-		toggle_editor_btn.text = "❌ 关闭配置"
+		toggle_editor_btn.text = "❌"
 		_on_part_selected(part_option.selected)
 	else:
-		toggle_editor_btn.text = "⚙️ 配置桌宠"
+		toggle_editor_btn.text = "≡"
 
 func _on_style_selected(index):
 	current_style = "cute" if index == 0 else "bizarre"
