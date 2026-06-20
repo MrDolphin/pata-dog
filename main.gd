@@ -1,11 +1,17 @@
 extends Node2D
 
-@onready var body = $Body
-@onready var tail = $Tail
-@onready var left_paw_up = $LeftPawUp
-@onready var left_paw_down = $LeftPawDown
-@onready var right_paw_up = $RightPawUp
-@onready var right_paw_down = $RightPawDown
+@onready var tail_joint = $Mascot/TailJoint
+@onready var tail = $Mascot/TailJoint/Tail
+@onready var body_joint = $Mascot/BodyJoint
+@onready var body = $Mascot/BodyJoint/Body
+@onready var head_joint = $Mascot/BodyJoint/HeadJoint
+@onready var head = $Mascot/BodyJoint/HeadJoint/Head
+@onready var left_paw_joint = $Mascot/LeftPawJoint
+@onready var left_paw_up = $Mascot/LeftPawJoint/LeftPawUp
+@onready var left_paw_down = $Mascot/LeftPawJoint/LeftPawDown
+@onready var right_paw_joint = $Mascot/RightPawJoint
+@onready var right_paw_up = $Mascot/RightPawJoint/RightPawUp
+@onready var right_paw_down = $Mascot/RightPawJoint/RightPawDown
 
 var use_left_paw = true
 var excitement = 0.0
@@ -21,10 +27,10 @@ func _process(delta):
 	excitement = max(0.0, excitement - delta * 2.0)
 	var time = Time.get_ticks_msec() / 1000.0
 	var speed = 5.0 + excitement * 15.0
-	tail.rotation = -0.5 + sin(time * speed) * (0.2 + excitement * 0.5)
+	tail_joint.rotation = -0.5 + sin(time * speed) * (0.2 + excitement * 0.5)
 	
 	# 让整个身体做极其轻微的回弹晃动
-	body.rotation = lerp_angle(body.rotation, 0.0, delta * 15.0)
+	body_joint.rotation = lerp_angle(body_joint.rotation, 0.0, delta * 15.0)
 
 func _input(event):
 	# 窗口拖拽
@@ -77,7 +83,7 @@ func _input(event):
 				
 	# 鼠标移动时微晃身体
 	elif event is InputEventMouseMotion:
-		body.rotation = clamp(event.relative.x * 0.005, -0.2, 0.2)
+		body_joint.rotation = clamp(event.relative.x * 0.005, -0.2, 0.2)
 
 func _paw_down(side):
 	if side == "left" or side == "both":
@@ -87,7 +93,7 @@ func _paw_down(side):
 		right_paw_up.visible = false
 		right_paw_down.visible = true
 	
-	body.rotation = randf_range(-0.1, 0.1)
+	body_joint.rotation = randf_range(-0.1, 0.1)
 
 func _reset_paws():
 	left_paw_up.visible = true
@@ -97,6 +103,7 @@ func _reset_paws():
 
 func _add_excitement():
 	excitement = min(1.0, excitement + 0.1)
+
 
 func _tap_sound():
 	pass
