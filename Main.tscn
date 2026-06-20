@@ -164,6 +164,17 @@ text = "风格: "
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="SoundThemeHBox" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/SoundThemeHBox"]
+layout_mode = 2
+text = "音效: "
+
+[node name="SoundOption" type="OptionButton" parent="UI/EditorPanel/VBoxContainer/SoundThemeHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
 [node name="TabContainer" type="TabContainer" parent="UI/EditorPanel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3

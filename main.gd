@@ -22,6 +22,7 @@ extends Node2D
 @onready var toggle_editor_btn = $UI/ToggleEditorBtn
 @onready var editor_panel = $UI/EditorPanel
 @onready var style_option = $UI/EditorPanel/VBoxContainer/StyleHBox/StyleOption
+@onready var sound_option = $UI/EditorPanel/VBoxContainer/SoundThemeHBox/SoundOption
 @onready var part_option = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PartHBox/PartOption
 @onready var canvas = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/CanvasContainer/Canvas
 @onready var brush_color_btn = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/BrushControl/BrushColor
@@ -91,6 +92,12 @@ func _ready():
 	style_option.add_item("可爱风格 (Cute)")
 	style_option.add_item("鬼畜风格 (Bizarre)")
 	style_option.item_selected.connect(_on_style_selected)
+	
+	for t_name in SoundManager.get_theme_names():
+		sound_option.add_item(t_name)
+	sound_option.selected = SaveManager.sound_theme
+	SoundManager.set_theme(SaveManager.sound_theme)
+	sound_option.item_selected.connect(_on_sound_theme_selected)
 	
 	part_option.add_item("头部 (Head)")
 	part_option.add_item("身体 (Body)")
@@ -436,6 +443,12 @@ func _on_toggle_editor_btn_pressed():
 
 func _on_style_selected(index):
 	current_style = "cute" if index == 0 else "bizarre"
+
+func _on_sound_theme_selected(index: int):
+	SoundManager.set_theme(index)
+	SaveManager.set_sound_theme(index)
+	SaveManager.save()
+	SoundManager.play_click()
 
 func _on_part_selected(index):
 	var selected_node = part_nodes[index]
