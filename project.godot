@@ -35,11 +35,11 @@ window/size/always_on_top=true
 window/size/transparent=true
 window/per_pixel_transparency/allowed=true
 
+[gui]
+
+theme/custom_font="res://system_font.tres"
+
 [rendering]
 
 environment/defaults/default_clear_color=Color(0, 0, 0, 0)
 viewport/transparent_background=true
-
-[gui]
-
-theme/custom_font="res://system_font.tres"

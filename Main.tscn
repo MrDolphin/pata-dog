@@ -123,12 +123,78 @@ color_ramp = SubResource("Gradient_particles")
 [node name="UI" type="CanvasLayer" parent="." unique_id=883840219]
 
 
-[node name="ToggleEditorBtn" type="Button" parent="UI" unique_id=282002418]
-offset_left = 20.0
-offset_top = 20.0
-offset_right = 120.0
-offset_bottom = 55.0
+[node name="BottomBar" type="HBoxContainer" parent="UI"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -60.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 1
+
+[node name="LeftSpacer" type="Control" parent="UI/BottomBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(20, 0)
+
+[node name="ToggleEditorBtn" type="Button" parent="UI/BottomBar" unique_id=282002418]
+custom_minimum_size = Vector2(100, 35)
+layout_mode = 2
+size_flags_vertical = 4
 text = "⚙️ 配置桌宠"
+
+[node name="MiddleSpacer" type="Control" parent="UI/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ProgressVBox" type="VBoxContainer" parent="UI/BottomBar"]
+layout_mode = 2
+alignment = 1
+
+[node name="ProgressLabel" type="Label" parent="UI/BottomBar/ProgressVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "打字数: 0 | 宝箱进度: 0/1000"
+horizontal_alignment = 2
+
+[node name="ChestProgressBar" type="ProgressBar" parent="UI/BottomBar/ProgressVBox"]
+custom_minimum_size = Vector2(200, 10)
+layout_mode = 2
+max_value = 1000.0
+step = 1.0
+value = 0.0
+show_percentage = false
+
+[node name="ChestButtonContainer" type="CenterContainer" parent="UI/BottomBar"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+
+[node name="ChestButtonPivot" type="Control" parent="UI/BottomBar/ChestButtonContainer"]
+layout_mode = 2
+
+[node name="ChestButton" type="Button" parent="UI/BottomBar/ChestButtonContainer/ChestButtonPivot"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -70.0
+offset_top = -25.0
+offset_right = 70.0
+offset_bottom = 25.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(70, 25)
+theme_override_colors/font_color = Color(1, 0.9, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+text = "🎁 点击开箱!"
+
+[node name="RightSpacer" type="Control" parent="UI/BottomBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(20, 0)
 
 [node name="EditorPanel" type="Panel" parent="UI" unique_id=174447156]
 visible = false
@@ -395,45 +461,6 @@ offset_right = 20.0
 offset_bottom = 20.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_handle")
 
-[node name="ProgressLabel" type="Label" parent="UI"]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -260.0
-offset_top = 20.0
-offset_right = -20.0
-offset_bottom = 50.0
-grow_horizontal = 0
-theme_override_font_sizes/font_size = 13
-text = "打字数: 0 | 宝箱进度: 0/1000"
-horizontal_alignment = 2
 
-[node name="ChestProgressBar" type="ProgressBar" parent="UI"]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -260.0
-offset_top = 45.0
-offset_right = -20.0
-offset_bottom = 55.0
-grow_horizontal = 0
-max_value = 1000.0
-step = 1.0
-value = 0.0
-show_percentage = false
-
-[node name="ChestButton" type="Button" parent="UI"]
-visible = false
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -160.0
-offset_top = 65.0
-offset_right = -20.0
-offset_bottom = 115.0
-grow_horizontal = 0
-theme_override_colors/font_color = Color(1, 0.9, 0.2, 1)
-theme_override_font_sizes/font_size = 18
-text = "🎁 点击开箱!"
 
 [node name="AudioStreamPlayers" type="Node" parent="." unique_id=537824719]

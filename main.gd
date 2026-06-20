@@ -19,7 +19,7 @@ extends Node2D
 @onready var left_prop_slot = $Mascot/LeftPawJoint/PropSlot
 @onready var right_prop_slot = $Mascot/RightPawJoint/PropSlot
 
-@onready var toggle_editor_btn = $UI/ToggleEditorBtn
+@onready var toggle_editor_btn = $UI/BottomBar/ToggleEditorBtn
 @onready var editor_panel = $UI/EditorPanel
 @onready var style_option = $UI/EditorPanel/VBoxContainer/StyleHBox/StyleOption
 @onready var sound_option = $UI/EditorPanel/VBoxContainer/SoundThemeHBox/SoundOption
@@ -38,9 +38,9 @@ extends Node2D
 @onready var off_x_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox/OffXSlider
 @onready var off_y_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox/OffYSlider
 
-@onready var progress_label = $UI/ProgressLabel
-@onready var chest_progress_bar = $UI/ChestProgressBar
-@onready var chest_button = $UI/ChestButton
+@onready var progress_label = $UI/BottomBar/ProgressVBox/ProgressLabel
+@onready var chest_progress_bar = $UI/BottomBar/ProgressVBox/ChestProgressBar
+@onready var chest_button = $UI/BottomBar/ChestButtonContainer/ChestButtonPivot/ChestButton
 @onready var chest_particles = $ChestParticles
 @onready var wardrobe_grid = $UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox/WardrobeGrid
 
