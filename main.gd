@@ -34,6 +34,7 @@ extends Node2D
 @onready var joint_handle = $UI/JointHandle
 
 @onready var progress_label = $UI/ProgressLabel
+@onready var chest_progress_bar = $UI/ChestProgressBar
 @onready var chest_button = $UI/ChestButton
 @onready var chest_particles = $ChestParticles
 @onready var wardrobe_grid = $UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox/WardrobeGrid
@@ -339,7 +340,10 @@ func _on_data_loaded():
 	_populate_wardrobe_ui()
 
 func _on_points_changed(total: int, current: int):
-	progress_label.text = "打字数: %d | 宝箱进度: %d/%d" % [total, current % cosmetics_manager.CHEST_COST, cosmetics_manager.CHEST_COST]
+	var progress = current % cosmetics_manager.CHEST_COST
+	progress_label.text = "打字数: %d | 宝箱进度: %d/%d" % [total, progress, cosmetics_manager.CHEST_COST]
+	chest_progress_bar.max_value = cosmetics_manager.CHEST_COST
+	chest_progress_bar.value = progress
 	
 	if current >= cosmetics_manager.CHEST_COST and cosmetics_manager.has_locked_items():
 		chest_button.visible = true
