@@ -167,6 +167,9 @@ scale_amount_min = 6.0
 scale_amount_max = 12.0
 color_ramp = SubResource("Gradient_particles")
 
+[node name="Camera2D" type="Camera2D" parent="."]
+anchor_mode = 0
+
 [node name="UI" type="CanvasLayer" parent="." unique_id=883840219]
 
 

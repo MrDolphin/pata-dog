@@ -23,6 +23,7 @@ extends Node2D
 @onready var editor_panel = $UI/FloatingWidget/EditorPanel
 @onready var global_scale_slider = $UI/FloatingWidget/EditorPanel/VBoxContainer/GlobalScaleHBox/GlobalScaleSlider
 @onready var style_option = $UI/FloatingWidget/EditorPanel/VBoxContainer/StyleHBox/StyleOption
+@onready var camera = $Camera2D
 @onready var sound_option = $UI/FloatingWidget/EditorPanel/VBoxContainer/SoundThemeHBox/SoundOption
 @onready var part_option = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/PartHBox/PartOption
 @onready var canvas = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/CanvasContainer/Canvas
@@ -398,6 +399,9 @@ func _reset_paws():
 # ─── UI & Events ──────────────────────────────────────────────
 
 func _on_data_loaded():
+	global_scale_slider.set_value_no_signal(SaveManager.global_scale)
+	camera.zoom = Vector2(SaveManager.global_scale, SaveManager.global_scale)
+
 	cosmetics_manager.update_slot_textures()
 	_on_points_changed(SaveManager.total_clicks, SaveManager.current_points)
 	_populate_wardrobe_ui()
@@ -538,13 +542,16 @@ func _populate_wardrobe_ui():
 
 func _on_toggle_editor_btn_pressed():
 	editor_panel.visible = !editor_panel.visible
+	var current_pos = floating_widget.position
 	if editor_panel.visible:
 		toggle_editor_btn.text = "❌"
 		floating_widget.size = Vector2i(350, 750)
+		floating_widget.position = current_pos - Vector2i(0, 750 - 120)
 		_on_part_selected(part_option.selected)
 	else:
 		toggle_editor_btn.text = "≡"
 		floating_widget.size = Vector2i(160, 120)
+		floating_widget.position = current_pos + Vector2i(0, 750 - 120)
 
 var widget_dragging = false
 var widget_drag_offset = Vector2i()
@@ -563,7 +570,7 @@ func _on_style_selected(index):
 	current_style = "cute" if index == 0 else "bizarre"
 
 func _on_global_scale_changed(value):
-	$Mascot.scale = Vector2(value, value)
+	camera.zoom = Vector2(value, value)
 	SaveManager.global_scale = value
 	SaveManager.save()
 

@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="Pata Dog"
 run/main_scene="res://Main.tscn"
-config/features=PackedStringArray("4.6", "Forward Plus")
+config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://assets/body.png"
 
 [autoload]
@@ -44,3 +44,5 @@ theme/custom_font="res://system_font.tres"
 
 environment/defaults/default_clear_color=Color(0, 0, 0, 0)
 viewport/transparent_background=true
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
