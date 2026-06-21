@@ -20,24 +20,26 @@ extends Node2D
 @onready var right_prop_slot = $Mascot/RightPawJoint/PropSlot
 
 @onready var toggle_editor_btn = $UI/FloatingWidget/WidgetPanel/HBox/ToggleEditorBtn
-@onready var editor_panel = $UI/EditorPanel
-@onready var style_option = $UI/EditorPanel/VBoxContainer/StyleHBox/StyleOption
-@onready var sound_option = $UI/EditorPanel/VBoxContainer/SoundThemeHBox/SoundOption
-@onready var part_option = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/PartHBox/PartOption
-@onready var canvas = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/CanvasContainer/Canvas
-@onready var brush_color_btn = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/BrushControl/BrushColor
-@onready var brush_size_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/BrushControl/BrushSize
-@onready var clear_btn = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/ActionButtons/ClearBtn
-@onready var save_btn = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/ActionButtons/SaveBtn
-@onready var import_btn = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/ImportButtons/ImportBtn
+@onready var editor_panel = $UI/FloatingWidget/EditorPanel
+@onready var style_option = $UI/FloatingWidget/EditorPanel/VBoxContainer/StyleHBox/StyleOption
+@onready var sound_option = $UI/FloatingWidget/EditorPanel/VBoxContainer/SoundThemeHBox/SoundOption
+@onready var part_option = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/PartHBox/PartOption
+@onready var canvas = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/CanvasContainer/Canvas
+@onready var brush_color_btn = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/BrushControl/BrushColor
+@onready var brush_size_slider = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/BrushControl/BrushSize
+@onready var clear_btn = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/ActionButtons/ClearBtn
+@onready var save_btn = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/ActionButtons/SaveBtn
+@onready var import_btn = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/ImportButtons/ImportBtn
 @onready var file_dialog = $UI/FileDialog
 @onready var joint_handle = $UI/JointHandle
-@onready var scale_x_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/ScaleHBox/ScaleXSlider
-@onready var scale_y_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/ScaleHBox/ScaleYSlider
-@onready var rot_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/RotHBox/RotSlider
-@onready var off_x_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox/OffXSlider
-@onready var off_y_slider = $UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox/OffYSlider
+@onready var scale_x_slider = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/ScaleHBox/ScaleXSlider
+@onready var scale_y_slider = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/ScaleHBox/ScaleYSlider
+@onready var rot_slider = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/RotHBox/RotSlider
+@onready var off_x_slider = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox/OffXSlider
+@onready var off_y_slider = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox/OffYSlider
 
+@onready var floating_widget = $UI/FloatingWidget
+@onready var widget_panel = $UI/FloatingWidget/WidgetPanel
 @onready var keystrokes_label = $UI/FloatingWidget/WidgetPanel/HBox/KeystrokesLabel
 @onready var chest_bubble = $UI/FloatingWidget/ChestBubble
 @onready var chest_count_label = $UI/FloatingWidget/ChestBubble/VBox/Count
@@ -47,11 +49,11 @@ extends Node2D
 @onready var unlock_item_icon = $UI/UnlockPopup/CenterContainer/PopupPanel/VBox/ItemIcon
 @onready var unlock_item_name = $UI/UnlockPopup/CenterContainer/PopupPanel/VBox/ItemName
 @onready var chest_particles = $ChestParticles
-@onready var wardrobe_grid = $UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox/WardrobeGrid
+@onready var wardrobe_grid = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox/WardrobeGrid
 
-@onready var import_audio_btn = $UI/EditorPanel/VBoxContainer/TabContainer/AudioTab/ImportAudioBtn
-@onready var clear_audio_btn = $UI/EditorPanel/VBoxContainer/TabContainer/AudioTab/ClearAudioBtn
-@onready var audio_list = $UI/EditorPanel/VBoxContainer/TabContainer/AudioTab/AudioList
+@onready var import_audio_btn = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/AudioTab/ImportAudioBtn
+@onready var clear_audio_btn = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/AudioTab/ClearAudioBtn
+@onready var audio_list = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/AudioTab/AudioList
 var audio_file_dialog: FileDialog = null
 
 var use_left_paw = true
@@ -133,6 +135,12 @@ func _ready():
 	import_btn.pressed.connect(_on_import_btn_pressed)
 	file_dialog.file_selected.connect(_on_file_selected)
 	
+	widget_panel.gui_input.connect(_on_widget_panel_gui_input)
+	editor_panel.gui_input.connect(_on_widget_panel_gui_input)
+
+	floating_widget.position = get_window().position + Vector2i(get_window().size.x - 180, get_window().size.y - 140)
+
+	SaveManager.load_data()
 	get_window().files_dropped.connect(_on_files_dropped)
 	joint_handle.gui_input.connect(_on_joint_handle_gui_input)
 	
@@ -524,9 +532,24 @@ func _on_toggle_editor_btn_pressed():
 	editor_panel.visible = !editor_panel.visible
 	if editor_panel.visible:
 		toggle_editor_btn.text = "❌"
+		floating_widget.size = Vector2i(350, 750)
 		_on_part_selected(part_option.selected)
 	else:
 		toggle_editor_btn.text = "≡"
+		floating_widget.size = Vector2i(160, 120)
+
+var widget_dragging = false
+var widget_drag_offset = Vector2i()
+
+func _on_widget_panel_gui_input(event):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			widget_dragging = true
+			widget_drag_offset = DisplayServer.mouse_get_position() - floating_widget.position
+		else:
+			widget_dragging = false
+	elif event is InputEventMouseMotion and widget_dragging:
+		floating_widget.position = DisplayServer.mouse_get_position() - widget_drag_offset
 
 func _on_style_selected(index):
 	current_style = "cute" if index == 0 else "bizarre"

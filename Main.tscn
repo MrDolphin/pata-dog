@@ -170,27 +170,22 @@ color_ramp = SubResource("Gradient_particles")
 [node name="UI" type="CanvasLayer" parent="." unique_id=883840219]
 
 
-[node name="FloatingWidget" type="Control" parent="UI"]
-layout_mode = 3
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -160.0
-offset_top = -60.0
-offset_right = -20.0
-offset_bottom = -20.0
-grow_horizontal = 0
-grow_vertical = 0
+[node name="FloatingWidget" type="Window" parent="UI"]
+transparent_bg = true
+size = Vector2i(160, 120)
+borderless = true
+always_on_top = true
+unresizable = true
 
 [node name="WidgetPanel" type="PanelContainer" parent="UI/FloatingWidget"]
 layout_mode = 1
-anchors_preset = 15
+anchors_preset = 12
+anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = -40.0
 grow_horizontal = 2
-grow_vertical = 2
+grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_widget")
 
 [node name="HBox" type="HBoxContainer" parent="UI/FloatingWidget/WidgetPanel"]
@@ -219,9 +214,9 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -30.0
-offset_top = -65.0
+offset_top = 15.0
 offset_right = 30.0
-offset_bottom = -5.0
+offset_bottom = 75.0
 grow_horizontal = 2
 
 [node name="BubblePanel" type="Panel" parent="UI/FloatingWidget/ChestBubble"]
@@ -311,15 +306,15 @@ theme_override_font_sizes/font_size = 20
 text = "NEW ITEM"
 horizontal_alignment = 1
 
-[node name="EditorPanel" type="Panel" parent="UI" unique_id=174447156]
+[node name="EditorPanel" type="Panel" parent="UI/FloatingWidget" unique_id=174447156]
 visible = false
-offset_left = 440.0
-offset_top = 20.0
-offset_right = 780.0
-offset_bottom = 530.0
+offset_left = 0.0
+offset_top = 120.0
+offset_right = 340.0
+offset_bottom = 630.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_editor")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="UI/EditorPanel" unique_id=43373736]
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/FloatingWidget/EditorPanel" unique_id=43373736]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -332,83 +327,83 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
 
-[node name="Title" type="Label" parent="UI/EditorPanel/VBoxContainer" unique_id=682972443]
+[node name="Title" type="Label" parent="UI/FloatingWidget/EditorPanel/VBoxContainer" unique_id=682972443]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "桌宠自定义编辑器"
 horizontal_alignment = 1
 
-[node name="StyleHBox" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer" unique_id=1469926371]
+[node name="StyleHBox" type="HBoxContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer" unique_id=1469926371]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/StyleHBox" unique_id=1562968361]
+[node name="Label" type="Label" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/StyleHBox" unique_id=1562968361]
 layout_mode = 2
 text = "风格: "
 
-[node name="StyleOption" type="OptionButton" parent="UI/EditorPanel/VBoxContainer/StyleHBox" unique_id=85086082]
+[node name="StyleOption" type="OptionButton" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/StyleHBox" unique_id=85086082]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="SoundThemeHBox" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer"]
+[node name="SoundThemeHBox" type="HBoxContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/SoundThemeHBox"]
+[node name="Label" type="Label" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/SoundThemeHBox"]
 layout_mode = 2
 text = "音效: "
 
-[node name="SoundOption" type="OptionButton" parent="UI/EditorPanel/VBoxContainer/SoundThemeHBox"]
+[node name="SoundOption" type="OptionButton" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/SoundThemeHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TabContainer" type="TabContainer" parent="UI/EditorPanel/VBoxContainer"]
+[node name="TabContainer" type="TabContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="PaintTab" type="ScrollContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer"]
+[node name="PaintTab" type="ScrollContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer"]
 layout_mode = 2
 metadata/_tab_index = 0
 
-[node name="PaintVBox" type="VBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab"]
+[node name="PaintVBox" type="VBoxContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="PartHBox" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
+[node name="PartHBox" type="HBoxContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/PartHBox"]
+[node name="Label" type="Label" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/PartHBox"]
 layout_mode = 2
 text = "当前部件: "
 
-[node name="PartOption" type="OptionButton" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/PartHBox"]
+[node name="PartOption" type="OptionButton" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/PartHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="CanvasContainer" type="CenterContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
+[node name="CanvasContainer" type="CenterContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
 layout_mode = 2
 
-[node name="Canvas" type="Control" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/CanvasContainer"]
+[node name="Canvas" type="Control" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/CanvasContainer"]
 layout_mode = 2
 script = ExtResource("7_canvas")
 
-[node name="BrushControl" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
+[node name="BrushControl" type="HBoxContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ColorLabel" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/BrushControl"]
+[node name="ColorLabel" type="Label" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/BrushControl"]
 layout_mode = 2
 text = "颜色: "
 
-[node name="BrushColor" type="ColorPickerButton" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/BrushControl"]
+[node name="BrushColor" type="ColorPickerButton" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/BrushControl"]
 layout_mode = 2
 size_flags_horizontal = 3
 color = Color(0, 0, 0, 1)
 
-[node name="SizeLabel" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/BrushControl"]
+[node name="SizeLabel" type="Label" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/BrushControl"]
 layout_mode = 2
 text = "大小: "
 
-[node name="BrushSize" type="HSlider" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/BrushControl"]
+[node name="BrushSize" type="HSlider" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/BrushControl"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -416,51 +411,51 @@ min_value = 2.0
 max_value = 50.0
 value = 12.0
 
-[node name="ActionButtons" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
+[node name="ActionButtons" type="HBoxContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ClearBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/ActionButtons"]
+[node name="ClearBtn" type="Button" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/ActionButtons"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "清除画布"
 
-[node name="SaveBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/ActionButtons"]
+[node name="SaveBtn" type="Button" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/ActionButtons"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "应用画板"
 
-[node name="ImportButtons" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
+[node name="ImportButtons" type="HBoxContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ImportBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/ImportButtons"]
+[node name="ImportBtn" type="Button" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/ImportButtons"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "导入图片"
 
-[node name="DropLabel" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
+[node name="DropLabel" type="Label" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
 theme_override_font_sizes/font_size = 11
 text = "拖拽本地图片可直接导入"
 horizontal_alignment = 1
 
-[node name="HSeparator2" type="HSeparator" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
+[node name="HSeparator2" type="HSeparator" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
 layout_mode = 2
 
-[node name="TransformControl" type="VBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
+[node name="TransformControl" type="VBoxContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox"]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="ScaleHBox" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl"]
+[node name="ScaleHBox" type="HBoxContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/ScaleHBox"]
+[node name="Label" type="Label" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/ScaleHBox"]
 layout_mode = 2
 text = "缩放 X/Y:"
 
-[node name="ScaleXSlider" type="HSlider" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/ScaleHBox"]
+[node name="ScaleXSlider" type="HSlider" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/ScaleHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -469,7 +464,7 @@ max_value = 3.0
 step = 0.05
 value = 1.0
 
-[node name="ScaleYSlider" type="HSlider" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/ScaleHBox"]
+[node name="ScaleYSlider" type="HSlider" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/ScaleHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -478,14 +473,14 @@ max_value = 3.0
 step = 0.05
 value = 1.0
 
-[node name="RotHBox" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl"]
+[node name="RotHBox" type="HBoxContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/RotHBox"]
+[node name="Label" type="Label" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/RotHBox"]
 layout_mode = 2
 text = "旋转:"
 
-[node name="RotSlider" type="HSlider" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/RotHBox"]
+[node name="RotSlider" type="HSlider" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/RotHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -494,14 +489,14 @@ max_value = 180.0
 step = 1.0
 value = 0.0
 
-[node name="OffHBox" type="HBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl"]
+[node name="OffHBox" type="HBoxContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox"]
+[node name="Label" type="Label" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox"]
 layout_mode = 2
 text = "X/Y:"
 
-[node name="OffXSlider" type="HSlider" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox"]
+[node name="OffXSlider" type="HSlider" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -510,7 +505,7 @@ max_value = 300.0
 step = 1.0
 value = 0.0
 
-[node name="OffYSlider" type="HSlider" parent="UI/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox"]
+[node name="OffYSlider" type="HSlider" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/TransformControl/OffHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -519,46 +514,46 @@ max_value = 300.0
 step = 1.0
 value = 0.0
 
-[node name="WardrobeTab" type="ScrollContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer"]
+[node name="WardrobeTab" type="ScrollContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer"]
 visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 
-[node name="VBox" type="VBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab"]
+[node name="VBox" type="VBoxContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/WardrobeTab"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox"]
+[node name="Label" type="Label" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox"]
 layout_mode = 2
 text = "装备栏"
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox"]
+[node name="HSeparator" type="HSeparator" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox"]
 layout_mode = 2
 
-[node name="WardrobeGrid" type="GridContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox"]
+[node name="WardrobeGrid" type="GridContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/WardrobeTab/VBox"]
 layout_mode = 2
 columns = 2
 
-[node name="AudioTab" type="VBoxContainer" parent="UI/EditorPanel/VBoxContainer/TabContainer"]
+[node name="AudioTab" type="VBoxContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer"]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 10
 metadata/_tab_index = 2
 
-[node name="Label" type="Label" parent="UI/EditorPanel/VBoxContainer/TabContainer/AudioTab"]
+[node name="Label" type="Label" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/AudioTab"]
 layout_mode = 2
 text = "自定义轮询音效 (WAV/OGG):"
 
-[node name="ImportAudioBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/TabContainer/AudioTab"]
+[node name="ImportAudioBtn" type="Button" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/AudioTab"]
 layout_mode = 2
 text = "➕ 导入音效"
 
-[node name="ClearAudioBtn" type="Button" parent="UI/EditorPanel/VBoxContainer/TabContainer/AudioTab"]
+[node name="ClearAudioBtn" type="Button" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/AudioTab"]
 layout_mode = 2
 text = "❌ 清空音效"
 
-[node name="AudioList" type="ItemList" parent="UI/EditorPanel/VBoxContainer/TabContainer/AudioTab"]
+[node name="AudioList" type="ItemList" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/AudioTab"]
 layout_mode = 2
 size_flags_vertical = 3
 
