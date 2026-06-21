@@ -105,6 +105,8 @@ func _ready():
 	# Connect global hook signal
 	GlobalHookManager.global_key_pressed.connect(_on_global_key_pressed)
 	
+	_update_mouse_passthrough()
+	
 	# Connect SaveManager signals
 	SaveManager.points_changed.connect(_on_points_changed)
 	SaveManager.data_loaded.connect(_on_data_loaded)
@@ -168,6 +170,7 @@ func _ready():
 	$UI.add_child(audio_file_dialog)
 	audio_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILES
 	audio_file_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	audio_file_dialog.use_native_dialog = true
 	audio_file_dialog.filters = ["*.wav, *.ogg ; Audio Files"]
 	audio_file_dialog.files_selected.connect(_on_audio_files_selected)
 	
@@ -450,6 +453,7 @@ func _on_points_changed(total: int, current: int):
 		if chest_shake_tween:
 			chest_shake_tween.kill()
 		chest_bubble.rotation = 0.0
+	_update_mouse_passthrough()
 
 func _start_chest_shake():
 	if chest_shake_tween and chest_shake_tween.is_valid():
@@ -552,6 +556,7 @@ func _on_toggle_editor_btn_pressed():
 		toggle_editor_btn.text = "≡"
 		floating_widget.size = Vector2i(160, 120)
 		floating_widget.position = current_pos + Vector2i(0, 750 - 120)
+	_update_mouse_passthrough()
 
 var widget_dragging = false
 var widget_drag_offset = Vector2i()
@@ -573,6 +578,7 @@ func _on_global_scale_changed(value):
 	camera.zoom = Vector2(value, value)
 	SaveManager.global_scale = value
 	SaveManager.save()
+	_update_mouse_passthrough()
 
 func _on_sound_theme_selected(index: int):
 	SoundManager.set_theme(index)
@@ -598,6 +604,39 @@ func _on_part_selected(index):
 			img.resize(canvas.canvas_width, canvas.canvas_height, Image.INTERPOLATE_LANCZOS)
 			canvas.image = img
 			canvas._update_texture()
+
+func _update_mouse_passthrough():
+	# Main Window
+	var s = SaveManager.global_scale
+	var rect = Rect2(150 * s, 150 * s, 500 * s, 400 * s)
+	var main_poly = PackedVector2Array([
+		rect.position,
+		Vector2(rect.end.x, rect.position.y),
+		rect.end,
+		Vector2(rect.position.x, rect.end.y)
+	])
+	get_window().mouse_passthrough_polygon = main_poly
+	
+	# Widget Window
+	var widget_poly = PackedVector2Array()
+	if editor_panel.visible:
+		widget_poly.append(Vector2(0, 0))
+		widget_poly.append(Vector2(350, 0))
+		widget_poly.append(Vector2(350, 750))
+		widget_poly.append(Vector2(0, 750))
+	else:
+		if chest_bubble.visible:
+			widget_poly.append(Vector2(0, 0))
+			widget_poly.append(Vector2(160, 0))
+			widget_poly.append(Vector2(160, 120))
+			widget_poly.append(Vector2(0, 120))
+		else:
+			widget_poly.append(Vector2(0, 80))
+			widget_poly.append(Vector2(160, 80))
+			widget_poly.append(Vector2(160, 120))
+			widget_poly.append(Vector2(0, 120))
+	floating_widget.mouse_passthrough_polygon = widget_poly
+
 
 func _on_transform_changed(value: float, type: String):
 	var idx = part_option.selected
