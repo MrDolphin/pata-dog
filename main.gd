@@ -21,6 +21,7 @@ extends Node2D
 
 @onready var toggle_editor_btn = $UI/FloatingWidget/WidgetPanel/HBox/ToggleEditorBtn
 @onready var editor_panel = $UI/FloatingWidget/EditorPanel
+@onready var global_scale_slider = $UI/FloatingWidget/EditorPanel/VBoxContainer/GlobalScaleHBox/GlobalScaleSlider
 @onready var style_option = $UI/FloatingWidget/EditorPanel/VBoxContainer/StyleHBox/StyleOption
 @onready var sound_option = $UI/FloatingWidget/EditorPanel/VBoxContainer/SoundThemeHBox/SoundOption
 @onready var part_option = $UI/FloatingWidget/EditorPanel/VBoxContainer/TabContainer/PaintTab/PaintVBox/PartHBox/PartOption
@@ -76,6 +77,11 @@ var context_menu: PopupMenu = null
 var cosmetics_manager = null
 
 func _ready():
+	get_tree().get_root().transparent_bg = true
+	get_window().transparent = true
+	get_window().transparent_bg = true
+	floating_widget.transparent = true
+	floating_widget.transparent_bg = true
 	get_viewport().transparent_bg = true
 	
 	# Instantiate cosmetics manager locally
@@ -126,6 +132,8 @@ func _ready():
 	part_option.add_item("右爪-落 (Right Paw Down)")
 	part_option.add_item("尾巴 (Tail)")
 	part_option.item_selected.connect(_on_part_selected)
+	
+	global_scale_slider.value_changed.connect(_on_global_scale_changed)
 	
 	toggle_editor_btn.pressed.connect(_on_toggle_editor_btn_pressed)
 	brush_color_btn.color_changed.connect(_on_brush_color_changed)
@@ -216,10 +224,14 @@ func _process(delta):
 # ─── Input Handling ───────────────────────────────────────────
 
 func _input(event):
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_MIDDLE:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
-			dragging_window = true
-			drag_offset = get_viewport().get_mouse_position()
+			if editor_panel.visible and event.position.x > editor_panel.position.x and event.position.y > editor_panel.position.y:
+				pass # Ignore drag if clicking on the panel (though editor_panel is on WidgetWindow now, this is for safety)
+			else:
+				dragging_window = true
+				drag_offset = get_viewport().get_mouse_position()
+				_trigger_alternate_wave(false)
 		else:
 			dragging_window = false
 			
@@ -239,13 +251,9 @@ func _input(event):
 	
 	elif event is InputEventMouseButton and not dragging_window:
 		if event.pressed:
-			if editor_panel.visible and event.position.x < 380:
-				return
 			if event.button_index == MOUSE_BUTTON_RIGHT:
 				context_menu.position = Vector2i(get_viewport().get_mouse_position()) + DisplayServer.window_get_position()
 				context_menu.popup()
-			elif event.button_index == MOUSE_BUTTON_LEFT:
-				_trigger_alternate_wave(false)
 
 func _on_context_menu_id_pressed(id: int):
 	if id == 0:
@@ -553,6 +561,11 @@ func _on_widget_panel_gui_input(event):
 
 func _on_style_selected(index):
 	current_style = "cute" if index == 0 else "bizarre"
+
+func _on_global_scale_changed(value):
+	$Mascot.scale = Vector2(value, value)
+	SaveManager.global_scale = value
+	SaveManager.save()
 
 func _on_sound_theme_selected(index: int):
 	SoundManager.set_theme(index)

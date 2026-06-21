@@ -355,6 +355,22 @@ text = "音效: "
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="GlobalScaleHBox" type="HBoxContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/GlobalScaleHBox"]
+layout_mode = 2
+text = "整体大小: "
+
+[node name="GlobalScaleSlider" type="HSlider" parent="UI/FloatingWidget/EditorPanel/VBoxContainer/GlobalScaleHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.2
+max_value = 2.0
+step = 0.05
+value = 1.0
+
 [node name="TabContainer" type="TabContainer" parent="UI/FloatingWidget/EditorPanel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3

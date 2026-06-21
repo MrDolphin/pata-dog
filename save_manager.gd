@@ -26,6 +26,8 @@ var sound_theme: int = 0
 var part_transforms: Dictionary = {}
 var custom_audio_paths: Array = []
 
+var global_scale: float = 1.0
+
 # ─── Internal ─────────────────────────────────────────────────
 
 var _auto_save_timer: Timer = null
@@ -83,7 +85,8 @@ func save() -> void:
 			"equipped_cosmetics": equipped_cosmetics,
 			"sound_theme": sound_theme,
 			"part_transforms": part_transforms,
-			"custom_audio_paths": custom_audio_paths
+			"custom_audio_paths": custom_audio_paths,
+			"global_scale": global_scale
 		}
 		file.store_string(JSON.stringify(data, "\t"))
 		file.close()
@@ -110,6 +113,7 @@ func load_data() -> void:
 			sound_theme = data.get("sound_theme", 0)
 			part_transforms = data.get("part_transforms", {})
 			custom_audio_paths = data.get("custom_audio_paths", [])
+			global_scale = float(data.get("global_scale", 1.0))
 			var equipped = data.get("equipped_cosmetics", {})
 			for slot in equipped_cosmetics.keys():
 				if equipped.has(slot):
