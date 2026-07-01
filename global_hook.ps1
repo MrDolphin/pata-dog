@@ -25,10 +25,13 @@ public class GlobalKeyboardHook {
     private IPEndPoint _endPoint;
     private int _parentPid;
     private uint _hookThreadId;
+    private System.Collections.Generic.HashSet<int> _pressedKeys = new System.Collections.Generic.HashSet<int>();
+
+    private const int WM_KEYUP = 0x0101;
+    private const int WM_SYSKEYUP = 0x0105;
 
     public delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
-    [StructLayout(LayoutKind.Sequential)]
     public struct MSG {
         public IntPtr hwnd;
         public uint message;
@@ -86,13 +89,20 @@ public class GlobalKeyboardHook {
     }
 
     private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
-        if (nCode >= 0 && (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN)) {
-            int vkCode = Marshal.ReadInt32(lParam);
-            byte[] data = Encoding.UTF8.GetBytes(vkCode.ToString());
-            try {
-                _udpClient.Send(data, data.Length, _endPoint);
-            } catch {
-                // Ignore send errors
+        if (nCode >= 0) {
+            if (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN) {
+                int vkCode = Marshal.ReadInt32(lParam);
+                if (_pressedKeys.Add(vkCode)) {
+                    byte[] data = Encoding.UTF8.GetBytes(vkCode.ToString());
+                    try {
+                        _udpClient.Send(data, data.Length, _endPoint);
+                    } catch {
+                        // Ignore send errors
+                    }
+                }
+            } else if (wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP) {
+                int vkCode = Marshal.ReadInt32(lParam);
+                _pressedKeys.Remove(vkCode);
             }
         }
         return CallNextHookEx(_hookID, nCode, wParam, lParam);

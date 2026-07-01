@@ -81,9 +81,24 @@ func _ready():
 	get_tree().get_root().transparent_bg = true
 	get_window().transparent = true
 	get_window().transparent_bg = true
+	get_window().always_on_top = true
 	floating_widget.transparent = true
 	floating_widget.transparent_bg = true
 	get_viewport().transparent_bg = true
+	
+	# 让主窗口和编辑器悬浮窗不显示在 Windows 任务栏上
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_SKIP_TASKBAR, true)
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_SKIP_TASKBAR, true, floating_widget.get_window_id())
+	
+	# 定时强制重新置顶，防止点击任务栏时桌宠和小窗口下沉被遮挡
+	var top_timer = Timer.new()
+	top_timer.wait_time = 0.5
+	top_timer.autostart = true
+	top_timer.timeout.connect(func():
+		get_window().always_on_top = true
+		floating_widget.always_on_top = true
+	)
+	add_child(top_timer)
 	
 	# Instantiate cosmetics manager locally
 	cosmetics_manager = preload("res://cosmetics_manager.gd").new()
