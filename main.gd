@@ -605,18 +605,83 @@ func _on_part_selected(index):
 			canvas.image = img
 			canvas._update_texture()
 
-func _update_mouse_passthrough():
-	# Main Window
-	var s = SaveManager.global_scale
-	var rect = Rect2(150 * s, 150 * s, 500 * s, 400 * s)
-	var main_poly = PackedVector2Array([
-		rect.position,
-		Vector2(rect.end.x, rect.position.y),
-		rect.end,
-		Vector2(rect.position.x, rect.end.y)
-	])
-	get_window().mouse_passthrough_polygon = main_poly
+func _get_sprite_polygon(sprite: Sprite2D, inflate_amount: float = 0.0) -> PackedVector2Array:
+	if not sprite or not sprite.texture: return PackedVector2Array()
+	var img = sprite.texture.get_image()
+	if not img or img.is_empty(): return PackedVector2Array()
 	
+	var bitmap = BitMap.new()
+	bitmap.create_from_image_alpha(img, 0.05)
+	var polys = bitmap.opaque_to_polygons(Rect2i(Vector2i.ZERO, img.get_size()), 2.0)
+	if polys.size() == 0: return PackedVector2Array()
+	
+	polys.sort_custom(func(a, b): return a.size() > b.size())
+	var poly = polys[0]
+	
+	var top_left = -Vector2(img.get_size()) / 2.0 + sprite.offset
+	var global_trans = sprite.get_global_transform()
+	var scale_factor = SaveManager.global_scale
+	
+	var transformed = PackedVector2Array()
+	for pt in poly:
+		var scene_pt = global_trans * (top_left + pt)
+		transformed.append(scene_pt * scale_factor)
+		
+	if inflate_amount > 0.0:
+		var inflated = Geometry2D.offset_polygon(transformed, inflate_amount * scale_factor)
+		if inflated.size() > 0:
+			inflated.sort_custom(func(a, b): return a.size() > b.size())
+			return inflated[0]
+			
+	return transformed
+
+func _update_mouse_passthrough():
+	# 生成所有可见部件的轮廓多边形（包括键盘乐器和饰品插槽）
+	var sprites = [
+		body,
+		head,
+		left_paw_up if left_paw_up.visible else left_paw_down,
+		right_paw_up if right_paw_up.visible else right_paw_down,
+		tail,
+		$Instrument,
+		hat_slot,
+		glasses_slot,
+		bowtie_slot,
+		left_prop_slot,
+		right_prop_slot
+	]
+	
+	var final_poly = PackedVector2Array()
+	for sp in sprites:
+		var poly = _get_sprite_polygon(sp, 5.0)
+		if poly.size() == 0: continue
+		if final_poly.size() == 0:
+			final_poly = poly
+		else:
+			var merged = Geometry2D.merge_polygons(final_poly, poly)
+			if merged.size() > 0:
+				merged.sort_custom(func(a, b): return a.size() > b.size())
+				final_poly = merged[0]
+				
+	# 安全缓冲区（同样受全局缩放比例影响）
+	var final_inflated = Geometry2D.offset_polygon(final_poly, 40.0 * SaveManager.global_scale)
+	if final_inflated.size() > 0:
+		final_inflated.sort_custom(func(a, b): return a.size() > b.size())
+		get_window().mouse_passthrough_polygon = final_inflated[0]
+	else:
+		if final_poly.size() > 0:
+			get_window().mouse_passthrough_polygon = final_poly
+		else:
+			var s = SaveManager.global_scale
+			var rect = Rect2(150 * s, 150 * s, 500 * s, 400 * s)
+			var main_poly = PackedVector2Array([
+				rect.position,
+				Vector2(rect.end.x, rect.position.y),
+				rect.end,
+				Vector2(rect.position.x, rect.end.y)
+			])
+			get_window().mouse_passthrough_polygon = main_poly
+
 	# Widget Window
 	var widget_poly = PackedVector2Array()
 	if editor_panel.visible:
