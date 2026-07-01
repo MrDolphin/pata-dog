@@ -71,15 +71,10 @@ public class GlobalKeyboardHook {
                 Process parentProcess = Process.GetProcessById(_parentPid);
                 IntPtr hWnd = parentProcess.MainWindowHandle;
                 if (hWnd != IntPtr.Zero) {
-                    const int GWL_EXSTYLE = -20;
-                    const int WS_EX_TOOLWINDOW = 0x00000080;
-                    const int WS_EX_APPWINDOW = 0x00040000;
-                    
-                    int style = GetWindowLong(hWnd, GWL_EXSTYLE);
-                    int newStyle = (style & ~WS_EX_APPWINDOW) | WS_EX_TOOLWINDOW;
-                    if (style != newStyle) {
-                        SetWindowLong(hWnd, GWL_EXSTYLE, newStyle);
-                        SetWindowPos(hWnd, IntPtr.Zero, 0, 0, 0, 0, 0x0027); // SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED
+                    IntPtr shellWnd = GetShellWindow();
+                    if (shellWnd != IntPtr.Zero) {
+                        const int GWL_HWNDPARENT = -8;
+                        SetWindowLongPtrSafe(hWnd, GWL_HWNDPARENT, shellWnd);
                     }
                     break;
                 }
@@ -138,14 +133,22 @@ public class GlobalKeyboardHook {
         return CallNextHookEx(_hookID, nCode, wParam, lParam);
     }
 
-    [DllImport("user32.dll", EntryPoint = "GetWindowLong", CharSet = CharSet.Auto)]
-    private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr", CharSet = CharSet.Auto)]
+    private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
 
     [DllImport("user32.dll", EntryPoint = "SetWindowLong", CharSet = CharSet.Auto)]
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
-    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetShellWindow();
+
+    private static IntPtr SetWindowLongPtrSafe(IntPtr hWnd, int nIndex, IntPtr dwNewLong) {
+        if (IntPtr.Size == 8) {
+            return SetWindowLongPtr(hWnd, nIndex, dwNewLong);
+        } else {
+            return new IntPtr(SetWindowLong(hWnd, nIndex, dwNewLong.ToInt32()));
+        }
+    }
 
 
     private void CheckParentProcess() {
