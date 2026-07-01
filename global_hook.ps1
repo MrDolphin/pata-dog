@@ -57,6 +57,36 @@ public class GlobalKeyboardHook {
             System.Threading.Thread checkThread = new System.Threading.Thread(CheckParentProcess);
             checkThread.IsBackground = true;
             checkThread.Start();
+
+            System.Threading.Thread hideThread = new System.Threading.Thread(HideWindowLoop);
+            hideThread.IsBackground = true;
+            hideThread.Start();
+        }
+    }
+
+    private void HideWindowLoop() {
+        // Wait up to 5 seconds for the parent Godot window to appear
+        for (int i = 0; i < 50; i++) {
+            try {
+                Process parentProcess = Process.GetProcessById(_parentPid);
+                IntPtr hWnd = parentProcess.MainWindowHandle;
+                if (hWnd != IntPtr.Zero) {
+                    const int GWL_EXSTYLE = -20;
+                    const int WS_EX_TOOLWINDOW = 0x00000080;
+                    const int WS_EX_APPWINDOW = 0x00040000;
+                    
+                    int style = GetWindowLong(hWnd, GWL_EXSTYLE);
+                    int newStyle = (style & ~WS_EX_APPWINDOW) | WS_EX_TOOLWINDOW;
+                    if (style != newStyle) {
+                        SetWindowLong(hWnd, GWL_EXSTYLE, newStyle);
+                        SetWindowPos(hWnd, IntPtr.Zero, 0, 0, 0, 0, 0x0027); // SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED
+                    }
+                    break;
+                }
+            } catch {
+                // Ignore process exit or handle errors
+            }
+            System.Threading.Thread.Sleep(100);
         }
     }
 
@@ -107,6 +137,16 @@ public class GlobalKeyboardHook {
         }
         return CallNextHookEx(_hookID, nCode, wParam, lParam);
     }
+
+    [DllImport("user32.dll", EntryPoint = "GetWindowLong", CharSet = CharSet.Auto)]
+    private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowLong", CharSet = CharSet.Auto)]
+    private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
 
     private void CheckParentProcess() {
         while (true) {

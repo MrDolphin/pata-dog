@@ -86,9 +86,8 @@ func _ready():
 	floating_widget.transparent_bg = true
 	get_viewport().transparent_bg = true
 	
-	# 让主窗口和编辑器悬浮窗不显示在 Windows 任务栏上
-	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_SKIP_TASKBAR, true)
-	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_SKIP_TASKBAR, true, floating_widget.get_window_id())
+	# 将悬浮窗口设为临时窗口（主窗口的子属窗口），这样它在 Windows 上会自动隐藏任务栏图标
+	floating_widget.transient = true
 	
 	# 定时强制重新置顶，防止点击任务栏时桌宠和小窗口下沉被遮挡
 	var top_timer = Timer.new()
