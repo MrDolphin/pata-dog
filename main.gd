@@ -246,7 +246,7 @@ func _input(event):
 				pass # Ignore drag if clicking on the panel (though editor_panel is on WidgetWindow now, this is for safety)
 			else:
 				dragging_window = true
-				drag_offset = get_viewport().get_mouse_position()
+				drag_offset = DisplayServer.mouse_get_position() - DisplayServer.window_get_position()
 				_trigger_alternate_wave(false)
 				# 拖拽时临时清除穿透多边形，使得整个 800x600 窗口捕获鼠标，避免滑出边缘中断拖拽
 				get_window().mouse_passthrough_polygon = PackedVector2Array()
@@ -257,7 +257,7 @@ func _input(event):
 				_update_mouse_passthrough()
 			
 	if event is InputEventMouseMotion and dragging_window:
-		DisplayServer.window_set_position(DisplayServer.window_get_position() + Vector2i(event.position - drag_offset))
+		DisplayServer.window_set_position(DisplayServer.mouse_get_position() - Vector2i(drag_offset))
 		return
 		
 	if dragging_joint:
@@ -583,8 +583,13 @@ func _on_widget_panel_gui_input(event):
 		if event.pressed:
 			widget_dragging = true
 			widget_drag_offset = DisplayServer.mouse_get_position() - floating_widget.position
+			# 拖拽时临时清除悬浮窗穿透多边形，使得整个 160x120 窗口捕获鼠标，避免滑出边缘中断拖拽
+			floating_widget.mouse_passthrough_polygon = PackedVector2Array()
 		else:
-			widget_dragging = false
+			if widget_dragging:
+				widget_dragging = false
+				# 拖拽结束，恢复悬浮窗穿透多边形
+				_update_mouse_passthrough()
 	elif event is InputEventMouseMotion and widget_dragging:
 		floating_widget.position = DisplayServer.mouse_get_position() - widget_drag_offset
 
