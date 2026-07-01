@@ -69,14 +69,20 @@ public class GlobalKeyboardHook {
         for (int i = 0; i < 50; i++) {
             try {
                 Process parentProcess = Process.GetProcessById(_parentPid);
-                IntPtr hWnd = parentProcess.MainWindowHandle;
-                if (hWnd != IntPtr.Zero) {
-                    IntPtr shellWnd = GetShellWindow();
-                    if (shellWnd != IntPtr.Zero) {
-                        const int GWL_HWNDPARENT = -8;
-                        SetWindowLongPtrSafe(hWnd, GWL_HWNDPARENT, shellWnd);
+                IntPtr shellWnd = GetShellWindow();
+                if (shellWnd != IntPtr.Zero) {
+                    bool foundAny = false;
+                    foreach (ProcessThread thread in parentProcess.Threads) {
+                        EnumThreadWindows(thread.Id, (hWnd, lParam) => {
+                            const int GWL_HWNDPARENT = -8;
+                            SetWindowLongPtrSafe(hWnd, GWL_HWNDPARENT, shellWnd);
+                            foundAny = true;
+                            return true;
+                        }, IntPtr.Zero);
                     }
-                    break;
+                    if (foundAny) {
+                        break;
+                    }
                 }
             } catch {
                 // Ignore process exit or handle errors
@@ -141,6 +147,12 @@ public class GlobalKeyboardHook {
 
     [DllImport("user32.dll")]
     private static extern IntPtr GetShellWindow();
+
+    private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool EnumThreadWindows(int dwThreadId, EnumWindowsProc lpfn, IntPtr lParam);
 
     private static IntPtr SetWindowLongPtrSafe(IntPtr hWnd, int nIndex, IntPtr dwNewLong) {
         if (IntPtr.Size == 8) {

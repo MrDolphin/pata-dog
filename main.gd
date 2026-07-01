@@ -86,9 +86,7 @@ func _ready():
 	floating_widget.transparent_bg = true
 	get_viewport().transparent_bg = true
 	
-	# 将悬浮窗口设为临时窗口（主窗口的子属窗口），这样它在 Windows 上会自动隐藏任务栏图标
-	floating_widget.transient = true
-	
+
 	# 定时强制重新置顶，防止点击任务栏时桌宠和小窗口下沉被遮挡
 	var top_timer = Timer.new()
 	top_timer.wait_time = 0.5
@@ -250,8 +248,13 @@ func _input(event):
 				dragging_window = true
 				drag_offset = get_viewport().get_mouse_position()
 				_trigger_alternate_wave(false)
+				# 拖拽时临时清除穿透多边形，使得整个 800x600 窗口捕获鼠标，避免滑出边缘中断拖拽
+				get_window().mouse_passthrough_polygon = PackedVector2Array()
 		else:
-			dragging_window = false
+			if dragging_window:
+				dragging_window = false
+				# 拖拽结束，恢复描边穿透多边形
+				_update_mouse_passthrough()
 			
 	if event is InputEventMouseMotion and dragging_window:
 		DisplayServer.window_set_position(DisplayServer.window_get_position() + Vector2i(event.position - drag_offset))
